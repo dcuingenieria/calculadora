@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora CTE DB-SE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculadora CTE DB-SE Expert Mobile</title>
     <style>
         :root {
             --bg: #F2F2F7;
@@ -18,7 +18,8 @@
 
         body {
             font-family: var(--font); background: var(--bg); color: var(--text);
-            margin: 0; padding: 24px; line-height: 1.5; font-size: 14px; /* Letra más grande */
+            margin: 0; padding: 20px; line-height: 1.5; font-size: 14px;
+            -webkit-text-size-adjust: 100%;
         }
 
         .container {
@@ -27,7 +28,7 @@
         }
 
         /* --- SIDEBAR --- */
-        .sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+        .sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 20px; }
         .card { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.02); }
         
         h1 { font-size: 20px; margin: 0 0 4px 0; font-weight: 700; color: #000; }
@@ -41,16 +42,19 @@
         select, input[type="text"] {
             width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
             font-size: 14px; background: #FFF; box-sizing: border-box; color: #333;
+            appearance: none; -webkit-appearance: none;
         }
+        select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%230071e3%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 10px auto; padding-right: 30px; }
+        
         select:focus, input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
 
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; font-weight: 500; }
-        .switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; font-weight: 500; min-height: 30px; }
+        .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #E5E5EA; transition: .3s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 2px; bottom: 2px; background: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #E5E5EA; transition: .3s; border-radius: 26px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 2px; bottom: 2px; background: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         input:checked + .slider { background: var(--accent); }
-        input:checked + .slider:before { transform: translateX(18px); }
+        input:checked + .slider:before { transform: translateX(20px); }
 
         .var-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .sub-config { background: #F2F2F7; padding: 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); margin: 10px 0; display: none; }
@@ -61,23 +65,27 @@
         /* --- RESULTADOS --- */
         .results-area { display: flex; flex-direction: column; gap: 24px; }
         
-        .result-group { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
-        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #F2F2F7; padding-bottom: 12px; }
+        .result-group { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); overflow: hidden; }
+        .group-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #F2F2F7; padding-bottom: 12px; gap: 10px; }
         .group-title { font-size: 18px; font-weight: 700; color: var(--text); }
-        .group-desc { font-size: 13px; color: var(--subtext); margin-left: 10px; font-weight: 400; }
+        .group-desc { font-size: 13px; color: var(--subtext); margin-left: 8px; font-weight: 400; display: inline-block; }
 
-        .combo-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .combo-table th { text-align: left; color: var(--subtext); font-weight: 600; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; }
+        /* Table Wrapper for Horizontal Scroll */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -24px; padding: 0 24px; }
+        
+        .combo-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 500px; /* Ensure table doesn't crush on mobile */ }
+        .combo-table th { text-align: left; color: var(--subtext); font-weight: 600; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; white-space: nowrap; }
         .combo-table td { padding: 12px; border-bottom: 1px solid #F2F2F7; vertical-align: top; }
         .combo-table tr:hover { background: #FAFAFA; }
 
         .f-code { 
             font-family: "SF Mono", "Menlo", monospace; 
             color: var(--accent); 
-            font-size: 13px; /* Aumentado */
+            font-size: 13px; 
             letter-spacing: -0.2px; 
             display: block; margin-top: 2px;
             font-weight: 500;
+            white-space: nowrap; /* Keep formula on one line usually preferred for copy */
         }
         .col-name { width: 30%; font-weight: 600; color: #333; }
         .col-formula { width: 50%; }
@@ -90,7 +98,7 @@
         .tag-red { background: #FFE5E5; color: #FF3B30; }
         .tag-gray { background: #F2F2F7; color: #666; }
 
-        .btn-copy { background: white; border: 1px solid #D1D1D6; color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-copy { background: white; border: 1px solid #D1D1D6; color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
 
         .notes-container { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
@@ -98,7 +106,38 @@
         .note-item strong { display: block; color: #000; margin-bottom: 4px; font-size: 14px; }
         .note-item.imp { background: #FFF9E6; border-color: #FFD60A; color: #664d03; }
 
-        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+        /* --- RESPONSIVE MEDIA QUERIES --- */
+        @media (max-width: 900px) {
+            body { padding: 16px; font-size: 13px; }
+            
+            .container { 
+                grid-template-columns: 1fr; 
+                gap: 20px; 
+            }
+            
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .card { padding: 20px; }
+            .result-group { padding: 20px; }
+            
+            /* Table Adjustments for Mobile */
+            .table-wrapper { margin: 0 -20px; padding: 0 20px; } /* Bleed to edge */
+            .combo-table { font-size: 13px; }
+            .col-name { min-width: 120px; }
+            
+            .notes-container { grid-template-columns: 1fr; }
+            
+            h1 { font-size: 22px; }
+            .group-title { font-size: 16px; }
+            .group-desc { display: block; margin-left: 0; margin-top: 4px; font-size: 12px; }
+            .group-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .btn-copy { width: 100%; text-align: center; padding: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -107,8 +146,8 @@
     <!-- PANEL CONFIGURACIÓN -->
     <div class="sidebar">
         <div class="card">
-            <h1>CTE DB-SE</h1>
-            <span class="subtitle">Generador de Combinaciones</span>
+            <h1>CTE DB-SE Expert</h1>
+            <span class="subtitle">v4.1 | Generador de Combinaciones</span>
             
             <div class="input-group">
                 <label>Uso Principal (Q_u)</label>
@@ -179,7 +218,9 @@
                 <div><span class="group-title">ELU - Resistencia</span><span class="group-desc">Ec. 4.3 (STR/GEO)</span></div>
                 <button class="btn-copy" onclick="copyBlock('tblELU')">Copiar ELU</button>
             </div>
-            <table class="combo-table"><tbody id="tblELU"></tbody></table>
+            <div class="table-wrapper">
+                <table class="combo-table"><tbody id="tblELU"></tbody></table>
+            </div>
         </div>
 
         <!-- ELS -->
@@ -188,7 +229,9 @@
                 <div><span class="group-title">ELS - Deformaciones</span><span class="group-desc">DB-SE 4.3.3</span></div>
                 <button class="btn-copy" onclick="copyBlock('tblELS')">Copiar ELS</button>
             </div>
-            <table class="combo-table"><tbody id="tblELS"></tbody></table>
+            <div class="table-wrapper">
+                <table class="combo-table"><tbody id="tblELS"></tbody></table>
+            </div>
         </div>
 
         <!-- ACCIDENTAL -->
@@ -197,7 +240,9 @@
                 <div><span class="group-title">Sismo / Accidental</span><span class="group-desc">Ec. 4.4 y 4.5</span></div>
                 <button class="btn-copy" onclick="copyBlock('tblACC')">Copiar ACC</button>
             </div>
-            <table class="combo-table"><tbody id="tblACC"></tbody></table>
+            <div class="table-wrapper">
+                <table class="combo-table"><tbody id="tblACC"></tbody></table>
+            </div>
         </div>
 
         <!-- NOTAS -->
@@ -247,11 +292,9 @@
         };
 
         // --- DEFINICIÓN DE CARGAS ---
-        // Corrección Clave: Usar spread operator AL PRINCIPIO para que 'name' sea el del input
         let loads = []; 
         
         // Uso Principal
-        // IMPORTANTE: Primero copiamos las propiedades de PSIS y LUEGO sobrescribimos el nombre con la variable
         loads.push({ ...PSIS[cfg.catU], id:'Qu', type:'Q', name: cfg.Qu }); 
 
         if(cfg.hasQc) {
