@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalcAcero | NCh427 Estándar</title>
+
+code
+Code
+download
+content_copy
+expand_less
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    slate: { 850: '#1e293b', 900: '#0f172a' },
+                },
+                fontFamily: {
+                    sans: ['Inter', 'system-ui', 'sans-serif'],
+                    mono: ['JetBrains Mono', 'monospace'],
+                },
+                boxShadow: {
+                    'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                    'inner-light': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
+                }
+            }
+        }
+    }
+</script>
+
+<!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<!-- Icons & Fonts -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+    body { background-color: #f1f5f9; color: #334155; }
+    
+    /* Inputs */
+    .input-group label { 
+        font-size: 0.7rem; font-weight: 700; color: #64748b; 
+        text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; display: block;
+    }
+    .input-field {
+        width: 100%; border: 1px solid #cbd5e1; border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem; font-size: 0.9rem; background: #fff;
+        color: #0f172a; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+    /* Visualizador SVG */
+    .beam-fill { fill: #e2e8f0; stroke: #475569; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+    .dim-line { stroke: #94a3b8; stroke-width: 1; marker-end: url(#arrow); marker-start: url(#arrow); }
+    .svg-text { font-family: 'Inter', sans-serif; font-size: 13px; fill: #dc2626; font-weight: 700; }
+    
+    /* Memoria */
+    .mem-block { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; overflow-x: auto; }
+    .mem-h { 
+        font-size: 0.85rem; font-weight: 700; color: #0f172a; text-transform: uppercase; 
+        border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; margin-top: 1.5rem; margin-bottom: 0.75rem; 
+    }
+    .mem-p { margin-bottom: 0.5rem; font-size: 0.9rem; line-height: 1.6; }
+
+    /* Table Optimization */
+    .opt-row { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
+    .opt-row:hover { background-color: #f8fafc; cursor: pointer; }
+    .opt-row.active { background-color: #eff6ff; border-left: 3px solid #2563eb; }
+    
+    /* Custom Scroll */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+</style>
+</head>
+<body class="pb-10 antialiased">
+
+code
+Code
+download
+content_copy
+expand_less
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-slate-900 text-white shadow-lg border-b border-slate-700">
+    <div class="max-w-[1600px] mx-auto px-6 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 p-1.5 rounded-lg"><i class="fa-solid fa-layer-group text-white"></i></div>
+            <h1 class="text-sm font-bold tracking-wider uppercase">CalcAcero <span class="text-slate-400 font-normal">| NCh427</span></h1>
+        </div>
+        <button onclick="exportMemory()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold px-4 py-2 rounded transition flex items-center gap-2">
+            <i class="fa-solid fa-download"></i> MEMORIA .TXT
+        </button>
+    </div>
+</header>
+
+<main class="max-w-[1600px] mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+    <!-- LEFT: Inputs -->
+    <div class="lg:col-span-3 space-y-6">
+        
+        <!-- Profile Selector -->
+        <div class="bg-white p-5 rounded-xl shadow-soft border border-slate-200 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-shapes text-blue-500"></i> Selección de Perfil
+            </h3>
+            
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <label class="cursor-pointer">
+                    <input type="radio" name="typeProfile" value="IN" checked onchange="filterAndCalc()" class="peer sr-only">
+                    <div class="text-center py-2 text-xs font-bold border rounded-md text-slate-500 peer-checked:bg-slate-800 peer-checked:text-white transition">IN (I)</div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="typeProfile" value="HN" onchange="filterAndCalc()" class="peer sr-only">
+                    <div class="text-center py-2 text-xs font-bold border rounded-md text-slate-500 peer-checked:bg-slate-800 peer-checked:text-white transition">HN (H)</div>
+                </label>
+            </div>
+
+            <div class="input-group mb-4">
+                <label>Perfil Nominal</label>
+                <select id="selProfile" onchange="calc()" class="input-field font-mono text-xs"></select>
+            </div>
+
+            <div class="input-group">
+                <label>Material</label>
+                <select id="selSteel" onchange="calc()" class="input-field">
+                    <option value="A36">A36 (Fy=2530)</option>
+                    <option value="A270ES">A270ES (Fy=2700)</option>
+                    <option value="A345ES">A345ES (Fy=3500)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Loads -->
+        <div class="bg-white p-5 rounded-xl shadow-soft border border-slate-200 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-weight-hanging text-emerald-500"></i> Cargas (ASD)
+            </h3>
+            <div class="input-group mb-3">
+                <label>Carga Axial $P$ [tonf]</label>
+                <input type="number" id="inP" value="15.0" step="0.1" oninput="calc()" class="input-field font-bold text-emerald-800">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="input-group">
+                    <label>Momento $M_x$</label>
+                    <input type="number" id="inMx" value="5.0" step="0.1" oninput="calc()" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label>Momento $M_y$</label>
+                    <input type="number" id="inMy" value="0.8" step="0.1" oninput="calc()" class="input-field">
+                </div>
+            </div>
+        </div>
+
+        <!-- Geometry -->
+        <div class="bg-white p-5 rounded-xl shadow-soft border border-slate-200 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-ruler-combined text-indigo-500"></i> Geometría [cm]
+            </h3>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="input-group"><label>Largo $L_x$</label><input type="number" id="inLx" value="600" oninput="calc()" class="input-field"></div>
+                <div class="input-group"><label>Factor $K_x$</label><input type="number" id="inKx" value="1.0" step="0.1" oninput="calc()" class="input-field"></div>
+                <div class="input-group"><label>Largo $L_y$</label><input type="number" id="inLy" value="600" oninput="calc()" class="input-field"></div>
+                <div class="input-group"><label>Factor $K_y$</label><input type="number" id="inKy" value="1.0" step="0.1" oninput="calc()" class="input-field"></div>
+                <div class="input-group"><label>No Arriost. $L_b$</label><input type="number" id="inLb" value="600" oninput="calc()" class="input-field"></div>
+                <div class="input-group"><label>Coef. $C_b$</label><input type="number" id="inCb" value="1.0" step="0.1" oninput="calc()" class="input-field"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: Dashboard -->
+    <div class="lg:col-span-6 space-y-6">
+        
+        <!-- Visualizer -->
+        <div class="bg-white rounded-xl shadow-soft border border-slate-200 overflow-hidden flex flex-col sm:flex-row h-auto sm:h-[280px]">
+            <!-- SVG -->
+            <div class="sm:w-1/2 bg-slate-50 flex items-center justify-center p-4 border-r border-slate-100 relative">
+                <span class="absolute top-3 left-3 text-[10px] font-bold text-slate-400 tracking-widest">ESQUEMA</span>
+                <svg width="240" height="240" viewBox="-30 -20 240 240">
+                    <defs>
+                        <marker id="arrow" markerWidth="6" markerHeight="6" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+                          <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8" />
+                        </marker>
+                    </defs>
+                    <rect x="20" y="20" width="140" height="12" class="beam-fill" />
+                    <rect x="20" y="168" width="140" height="12" class="beam-fill" />
+                    <rect x="82" y="32" width="16" height="136" class="beam-fill" />
+                    
+                    <!-- Cotas -->
+                    <line x1="20" y1="10" x2="160" y2="10" class="dim-line" />
+                    <text x="90" y="0" text-anchor="middle" class="svg-text" id="svg_bf">bf</text>
+                    
+                    <line x1="0" y1="20" x2="0" y2="180" class="dim-line" />
+                    <text x="-5" y="105" text-anchor="end" dominant-baseline="middle" class="svg-text" id="svg_d">d</text>
+                    
+                    <text x="170" y="30" text-anchor="start" dominant-baseline="middle" class="svg-text" id="svg_tf">tf</text>
+                    <text x="105" y="100" text-anchor="start" dominant-baseline="middle" class="svg-text" id="svg_tw">tw</text>
+                </svg>
+            </div>
+            <!-- Data -->
+            <div class="sm:w-1/2 p-6 overflow-y-auto">
+                <div class="flex justify-between items-center border-b pb-2 mb-3">
+                    <span class="text-xs font-bold text-slate-500">PROPIEDADES GEOMÉTRICAS</span>
+                    <span class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded" id="txt_name">IN 30x75.4</span>
+                </div>
+                <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                    <div class="flex justify-between"><span class="text-slate-500">Altura ($d$)</span><b id="txt_d">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Ancho ($b_f$)</span><b id="txt_bf">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Esp. Alma ($t_w$)</span><b id="txt_tw">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Esp. Ala ($t_f$)</span><b id="txt_tf">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Área ($A_g$)</span><b id="txt_A">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Peso</span><b id="txt_W">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Inercia ($I_x$)</span><b id="txt_Ix">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Módulo ($Z_x$)</span><b id="txt_Zx">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Inercia ($I_y$)</span><b id="txt_Iy">-</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Radio ($r_y$)</span><b id="txt_ry">-</b></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Comp -->
+            <div class="bg-white p-4 rounded-xl border-l-4 border-l-slate-300 shadow-soft flex flex-col justify-between" id="card_c">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Compresión</span>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span class="text-2xl font-bold text-slate-700" id="val_c">0.00</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500" id="tag_c">-</span>
+                </div>
+            </div>
+            <!-- Flex X -->
+            <div class="bg-white p-4 rounded-xl border-l-4 border-l-slate-300 shadow-soft flex flex-col justify-between" id="card_mx">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Flexión X-X</span>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span class="text-2xl font-bold text-slate-700" id="val_mx">0.00</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500" id="tag_mx">-</span>
+                </div>
+            </div>
+            <!-- Flex Y -->
+            <div class="bg-white p-4 rounded-xl border-l-4 border-l-slate-300 shadow-soft flex flex-col justify-between" id="card_my">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Flexión Y-Y</span>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span class="text-2xl font-bold text-slate-700" id="val_my">0.00</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500" id="tag_my">-</span>
+                </div>
+            </div>
+            <!-- Interaction -->
+            <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-l-blue-500 shadow-lg flex flex-col justify-between relative overflow-hidden" id="card_int">
+                <span class="text-[10px] font-bold text-blue-300 uppercase tracking-wider z-10">Factor Utilización</span>
+                <div class="flex items-baseline gap-2 mt-2 z-10">
+                    <span class="text-3xl font-bold text-white" id="val_int">0.00</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-600 text-white" id="tag_int">-</span>
+                </div>
+                <i class="fa-solid fa-chart-simple absolute -right-1 -bottom-2 text-6xl text-white opacity-5"></i>
+            </div>
+        </div>
+
+        <!-- Memory -->
+        <div class="bg-white rounded-xl shadow-soft border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="toggleMem()">
+                <h3 class="text-xs font-bold text-slate-700 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i> Memoria de Cálculo Detallada
+                </h3>
+                <i class="fa-solid fa-chevron-down text-slate-400 transition-transform" id="chevron"></i>
+            </div>
+            <div id="memContent" class="hidden p-8 text-slate-600 font-sans leading-relaxed">
+                <!-- Generated -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT: Optimization -->
+    <div class="lg:col-span-3">
+        <div class="bg-white rounded-xl shadow-soft border border-slate-200 flex flex-col h-[calc(100vh-140px)] sticky top-24 overflow-hidden">
+            <div class="p-3 bg-emerald-600 text-white shrink-0">
+                <h3 class="text-xs font-bold uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Optimización
+                </h3>
+                <p class="text-[10px] text-emerald-100 mt-0.5">Perfiles más livianos que cumplen ($FU \le 1.0$)</p>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-semibold sticky top-0 shadow-sm z-10">
+                        <tr>
+                            <th class="px-3 py-2 border-b">Perfil</th>
+                            <th class="px-2 py-2 border-b text-right">Kg/m</th>
+                            <th class="px-3 py-2 border-b text-right">F.U.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="optBody" class="text-xs"></tbody>
+                </table>
+            </div>
+            <div class="p-2 bg-slate-50 border-t border-slate-200 text-center text-[10px] text-slate-400 shrink-0">
+                Clic en una fila para aplicar
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    // --- 1. DATA ---
+    const MATERIALS = {
+        "A36": { Fy: 2530, E: 2040000 },
+        "A270ES": { Fy: 2700, E: 2040000 },
+        "A345ES": { Fy: 3500, E: 2040000 }
+    };
+
+    const PROFILES = [
+        { name: "IN 100x352", A: 449.0, d: 100.0, tw: 1.4, bf: 40.0, tf: 4.0, Ix: 829000, Sx: 16600, rx: 43.00, Iy: 42700, Sy: 2130, ry: 9.75, J: 1790.82, Cw: 98304000, Zx: 18322.40, Zy: 6700.00, rts: 11.11, h0: 96.0 },
+        { name: "IN 100x322", A: 420.0, d: 100.0, tw: 1.4, bf: 40.0, tf: 3.5, Ix: 746000, Sx: 14900, rx: 42.60, Iy: 37400, Sy: 1870, ry: 9.54, J: 1228.40, Cw: 86914333, Zx: 16537.15, Zy: 6300.00, rts: 11.00, h0: 96.5 },
+        { name: "IN 100x304", A: 387.0, d: 100.0, tw: 1.4, bf: 40.0, tf: 3.2, Ix: 696000, Sx: 13900, rx: 42.40, Iy: 34200, Sy: 1710, ry: 9.39, J: 959.43, Cw: 79959381, Zx: 15456.74, Zy: 6060.00, rts: 10.91, h0: 96.8 },
+        { name: "IN 100x280", A: 356.0, d: 100.0, tw: 1.4, bf: 40.0, tf: 2.8, Ix: 627000, Sx: 12500, rx: 42.00, Iy: 29900, Sy: 1490, ry: 9.16, J: 671.73, Cw: 70543872, Zx: 14005.38, Zy: 5740.00, rts: 10.78, h0: 97.2 },
+        { name: "IN 100x279", A: 355.0, d: 100.0, tw: 1.4, bf: 35.0, tf: 3.2, Ix: 621000, Sx: 12400, rx: 41.80, Iy: 22900, Sy: 1310, ry: 8.03, J: 850.20, Cw: 53566539, Zx: 13907.94, Zy: 5460.00, rts: 9.45, h0: 96.8 },
+        { name: "IN 100x258", A: 328.0, d: 100.0, tw: 1.4, bf: 35.0, tf: 2.8, Ix: 561000, Sx: 11200, rx: 41.40, Iy: 20000, Sy: 1140, ry: 7.81, J: 598.56, Cw: 47258883, Zx: 12644.58, Zy: 5215.00, rts: 9.32, h0: 97.2 },
+        { name: "IN 100x242", A: 308.0, d: 100.0, tw: 1.4, bf: 35.0, tf: 2.5, Ix: 516000, Sx: 10300, rx: 40.90, Iy: 17900, Sy: 1020, ry: 7.62, J: 451.48, Cw: 42456299, Zx: 11690.00, Zy: 5031.25, rts: 9.20, h0: 97.5 },
+        { name: "IN 100x226", A: 288.0, d: 100.0, tw: 1.4, bf: 35.0, tf: 2.2, Ix: 470000, Sx: 9400, rx: 40.40, Iy: 15700, Sy: 900, ry: 7.40, J: 335.90, Cw: 37591814, Zx: 10729.38, Zy: 4847.50, rts: 9.04, h0: 97.8 },
+        { name: "IN 100x215", A: 274.0, d: 100.0, tw: 1.4, bf: 35.0, tf: 2.0, Ix: 439000, Sx: 8790, rx: 40.00, Iy: 14300, Sy: 818, ry: 7.22, J: 274.47, Cw: 34314292, Zx: 10085.60, Zy: 4725.00, rts: 8.93, h0: 98.0 },
+        { name: "IN 100x205", A: 261.0, d: 100.0, tw: 1.4, bf: 35.0, tf: 1.8, Ix: 408000, Sx: 8170, rx: 39.60, Iy: 12900, Sy: 736, ry: 7.03, J: 224.25, Cw: 31009044, Zx: 9439.14, Zy: 4602.50, rts: 8.80, h0: 98.2 },
+        { name: "IN 100x194", A: 248.0, d: 100.0, tw: 1.4, bf: 35.0, tf: 1.6, Ix: 377000, Sx: 7540, rx: 39.00, Iy: 11500, Sy: 655, ry: 6.80, J: 184.11, Cw: 27675984, Zx: 8789.98, Zy: 4480.00, rts: 8.65, h0: 98.4 },
+        { name: "IN 90x328", A: 418.0, d: 90.0, tw: 1.2, bf: 40.0, tf: 4.0, Ix: 647000, Sx: 14400, rx: 39.30, Iy: 42700, Sy: 2130, ry: 10.10, J: 1753.90, Cw: 78890667, Zx: 15777.20, Zy: 5630.00, rts: 11.29, h0: 86.0 },
+        { name: "IN 90x298", A: 380.0, d: 90.0, tw: 1.2, bf: 40.0, tf: 3.5, Ix: 561000, Sx: 12900, rx: 39.10, Iy: 37400, Sy: 1870, ry: 9.92, J: 1191.14, Cw: 69834333, Zx: 14176.70, Zy: 5230.00, rts: 11.19, h0: 86.5 },
+        { name: "IN 90x280", A: 356.0, d: 90.0, tw: 1.2, bf: 40.0, tf: 3.2, Ix: 541000, Sx: 12000, rx: 39.00, Iy: 34100, Sy: 1710, ry: 9.79, J: 921.97, Cw: 64292181, Zx: 13207.09, Zy: 4990.00, rts: 11.11, h0: 86.8 },
+        { name: "IN 90x255", A: 325.0, d: 90.0, tw: 1.2, bf: 40.0, tf: 2.8, Ix: 486000, Sx: 10800, rx: 38.70, Iy: 29900, Sy: 1490, ry: 9.58, J: 634.00, Cw: 56775339, Zx: 11903.41, Zy: 4670.00, rts: 10.98, h0: 87.2 },
+        { name: "IN 90x254", A: 324.0, d: 90.0, tw: 1.2, bf: 35.0, tf: 3.2, Ix: 481000, Sx: 10700, rx: 38.50, Iy: 22900, Sy: 1310, ry: 8.40, J: 812.74, Cw: 43070739, Zx: 11818.29, Zy: 4390.00, rts: 9.63, h0: 86.8 },
+        { name: "IN 90x233", A: 297.0, d: 90.0, tw: 1.2, bf: 35.0, tf: 2.8, Ix: 433000, Sx: 9620, rx: 38.20, Iy: 20000, Sy: 1140, ry: 8.21, J: 560.83, Cw: 38035041, Zx: 10682.61, Zy: 4145.00, rts: 9.52, h0: 87.2 },
+        { name: "IN 90x217", A: 277.0, d: 90.0, tw: 1.2, bf: 35.0, tf: 2.5, Ix: 396000, Sx: 8810, rx: 37.80, Iy: 17900, Sy: 1020, ry: 8.03, J: 413.54, Cw: 34193929, Zx: 9823.75, Zy: 3961.25, rts: 9.42, h0: 87.5 },
+        { name: "IN 90x202", A: 257.0, d: 90.0, tw: 1.2, bf: 35.0, tf: 2.2, Ix: 360000, Sx: 7990, rx: 37.40, Iy: 15700, Sy: 899, ry: 7.83, J: 297.76, Cw: 30297347, Zx: 8958.81, Zy: 3777.50, rts: 9.29, h0: 87.8 },
+        { name: "IN 90x191", A: 243.0, d: 90.0, tw: 1.2, bf: 35.0, tf: 2.0, Ix: 335000, Sx: 7440, rx: 37.10, Iy: 14300, Sy: 817, ry: 7.67, J: 236.20, Cw: 27668667, Zx: 8378.80, Zy: 3655.00, rts: 9.19, h0: 88.0 },
+        { name: "IN 90x180", A: 230.0, d: 90.0, tw: 1.2, bf: 35.0, tf: 1.8, Ix: 310000, Sx: 6880, rx: 36.70, Iy: 12900, Sy: 736, ry: 7.49, J: 185.85, Cw: 25015119, Zx: 7796.09, Zy: 3532.50, rts: 9.09, h0: 88.2 },
+        { name: "IN 90x170", A: 216.0, d: 90.0, tw: 1.2, bf: 35.0, tf: 1.6, Ix: 284000, Sx: 6320, rx: 36.30, Iy: 11400, Sy: 6540, ry: 7.28, J: 145.57, Cw: 22336617, Zx: 7210.67, Zy: 3410.00, rts: 8.94, h0: 88.4 },
+        { name: "IN 80x250", A: 318.0, d: 80.0, tw: 1.0, bf: 35.0, tf: 3.5, Ix: 391000, Sx: 9780, rx: 35.10, Iy: 25000, Sy: 1430, ry: 8.87, J: 1024.75, Cw: 36591803, Zx: 10703.50, Zy: 3743.75, rts: 9.89, h0: 76.5 },
+        { name: "IN 80x234", A: 298.0, d: 80.0, tw: 1.0, bf: 35.0, tf: 3.2, Ix: 364000, Sx: 9090, rx: 35.00, Iy: 22900, Sy: 1310, ry: 8.77, J: 789.12, Cw: 33718272, Zx: 9955.84, Zy: 3560.00, rts: 9.83, h0: 76.8 },
+        { name: "IN 80x212", A: 270.0, d: 80.0, tw: 1.0, bf: 35.0, tf: 2.8, Ix: 326000, Sx: 8160, rx: 34.70, Iy: 20000, Sy: 1140, ry: 8.60, J: 537.01, Cw: 29811616, Zx: 8949.44, Zy: 3315.00, rts: 9.73, h0: 77.2 },
+        { name: "IN 80x196", A: 250.0, d: 80.0, tw: 1.0, bf: 35.0, tf: 2.5, Ix: 298000, Sx: 7450, rx: 34.50, Iy: 17900, Sy: 1020, ry: 8.45, J: 389.58, Cw: 26824788, Zx: 8187.50, Zy: 3131.25, rts: 9.64, h0: 77.5 },
+        { name: "IN 80x180", A: 230.0, d: 80.0, tw: 1.0, bf: 35.0, tf: 2.2, Ix: 269000, Sx: 7630, rx: 34.20, Iy: 15700, Sy: 899, ry: 8.28, J: 273.65, Cw: 23788922, Zx: 7419.44, Zy: 2947.50, rts: 8.95, h0: 77.8 },
+        { name: "IN 80x177", A: 225.0, d: 80.0, tw: 1.0, bf: 30.0, tf: 2.5, Ix: 260000, Sx: 6510, rx: 34.00, Iy: 11300, Sy: 750, ry: 7.07, J: 337.50, Cw: 16892578, Zx: 7218.75, Zy: 2725.00, rts: 8.19, h0: 77.5 },
+        { name: "IN 80x163", A: 208.0, d: 80.0, tw: 1.0, bf: 30.0, tf: 2.2, Ix: 236000, Sx: 5900, rx: 33.70, Iy: 9910, Sy: 660, ry: 6.91, J: 238.16, Cw: 14980779, Zx: 6563.64, Zy: 2590.00, rts: 8.08, h0: 77.8 },
+        { name: "IN 80x154", A: 196.0, d: 80.0, tw: 1.0, bf: 30.0, tf: 2.0, Ix: 219000, Sx: 5480, rx: 33.40, Iy: 9010, Sy: 600, ry: 6.78, J: 185.33, Cw: 13689000, Zx: 6124.00, Zy: 2500.00, rts: 8.01, h0: 78.0 },
+        { name: "IN 80x145", A: 184.0, d: 80.0, tw: 1.0, bf: 30.0, tf: 1.8, Ix: 202000, Sx: 5060, rx: 33.10, Iy: 8110, Sy: 540, ry: 6.63, J: 142.11, Cw: 12383361, Zx: 5682.04, Zy: 2410.00, rts: 7.91, h0: 78.2 },
+        { name: "IN 80x136", A: 173.0, d: 80.0, tw: 1.0, bf: 30.0, tf: 1.6, Ix: 185000, Sx: 4630, rx: 32.70, Iy: 7210, Sy: 480, ry: 6.46, J: 107.52, Cw: 11063808, Zx: 5237.76, Zy: 2320.00, rts: 7.81, h0: 78.4 },
+        { name: "IN 80x127", A: 161.0, d: 80.0, tw: 1.0, bf: 30.0, tf: 1.4, Ix: 168000, Sx: 4200, rx: 32.30, Iy: 6310, Sy: 420, ry: 6.25, J: 80.61, Cw: 9730287, Zx: 4791.16, Zy: 2230.00, rts: 7.68, h0: 78.6 },
+        { name: "IN 70x232", A: 295.0, d: 70.0, tw: 0.8, bf: 35.0, tf: 3.5, Ix: 288000, Sx: 8220, rx: 31.20, Iy: 25000, Sy: 1430, ry: 9.20, J: 1011.17, Cw: 27650579, Zx: 8940.05, Zy: 3123.75, rts: 10.06, h0: 66.5 },
+        { name: "IN 70x216", A: 275.0, d: 70.0, tw: 0.8, bf: 35.0, tf: 3.2, Ix: 267000, Sx: 7640, rx: 31.20, Iy: 22900, Sy: 1310, ry: 9.12, J: 775.44, Cw: 25509139, Zx: 8290.59, Zy: 2940.00, rts: 10.00, h0: 66.8 },
+        { name: "IN 70x194", A: 248.0, d: 70.0, tw: 0.8, bf: 35.0, tf: 2.8, Ix: 239000, Sx: 6830, rx: 31.10, Iy: 20000, Sy: 1140, ry: 8.99, J: 523.20, Cw: 22588608, Zx: 7415.07, Zy: 2695.00, rts: 3.14, h0: 67.2 },
+        { name: "IN 70x178", A: 227.0, d: 70.0, tw: 0.8, bf: 35.0, tf: 2.5, Ix: 218000, Sx: 6220, rx: 31.00, Iy: 17900, Sy: 1020, ry: 8.87, J: 375.68, Cw: 20348877, Zx: 6751.25, Zy: 2511.25, rts: 9.85, h0: 67.5 },
+        { name: "IN 70x162", A: 206.0, d: 70.0, tw: 0.8, bf: 35.0, tf: 2.2, Ix: 196000, Sx: 5600, rx: 30.80, Iy: 15700, Sy: 898, ry: 8.73, J: 259.65, Cw: 18066539, Zx: 6081.27, Zy: 2327.50, rts: 9.75, h0: 67.8 },
+        { name: "IN 70x159", A: 202.0, d: 70.0, tw: 0.8, bf: 30.0, tf: 2.5, Ix: 189000, Sx: 5410, rx: 30.60, Iy: 11300, Sy: 750, ry: 7.46, J: 323.59, Cw: 12814453, Zx: 5907.50, Zy: 2105.00, rts: 8.39, h0: 67.5 },
+        { name: "IN 70x145", A: 184.0, d: 70.0, tw: 0.8, bf: 30.0, tf: 2.2, Ix: 171000, Sx: 4870, rx: 30.40, Iy: 9900, Sy: 660, ry: 7.33, J: 224.16, Cw: 11377179, Zx: 5335.47, Zy: 1970.00, rts: 8.30, h0: 67.8 },
+        { name: "IN 70x136", A: 173.0, d: 70.0, tw: 0.8, bf: 30.0, tf: 2.0, Ix: 158000, Sx: 5410, rx: 30.20, Iy: 9000, Sy: 600, ry: 7.22, J: 171.26, Cw: 10404000, Zx: 4951.20, Zy: 1880.00, rts: 7.52, h0: 68.0 },
+        { name: "IN 70x126", A: 161.0, d: 70.0, tw: 0.8, bf: 30.0, tf: 1.8, Ix: 145000, Sx: 4150, rx: 30.00, Iy: 8100, Sy: 540, ry: 7.09, J: 127.97, Cw: 9418761, Zx: 4564.59, Zy: 1790.00, rts: 8.16, h0: 68.2 },
+        { name: "IN 70x117", A: 149.0, d: 70.0, tw: 0.8, bf: 30.0, tf: 1.6, Ix: 132000, Sx: 3780, rx: 29.70, Iy: 7200, Sy: 480, ry: 6.94, J: 93.32, Cw: 8421408, Zx: 4175.65, Zy: 1700.00, rts: 8.07, h0: 68.4 },
+        { name: "IN 70x108", A: 138.0, d: 70.0, tw: 0.8, bf: 30.0, tf: 1.4, Ix: 119000, Sx: 3400, rx: 29.40, Iy: 6300, Sy: 420, ry: 6.76, J: 66.35, Cw: 7411887, Zx: 3784.37, Zy: 1610.00, rts: 7.97, h0: 68.6 },
+        { name: "IN 60x184", A: 235.0, d: 60.0, tw: 0.8, bf: 30.0, tf: 3.2, Ix: 165000, Sx: 5510, rx: 26.50, Iy: 14400, Sy: 960, ry: 7.83, J: 664.51, Cw: 11614464, Zx: 6027.39, Zy: 2160.00, rts: 8.62, h0: 56.8 },
+        { name: "IN 60x166", A: 212.0, d: 60.0, tw: 0.8, bf: 30.0, tf: 2.8, Ix: 148000, Sx: 4940, rx: 26.50, Iy: 12600, Sy: 840, ry: 7.72, J: 448.32, Cw: 10306296, Zx: 5396.67, Zy: 1980.00, rts: 8.54, h0: 57.2 },
+        { name: "IN 60x152", A: 194.0, d: 60.0, tw: 0.8, bf: 30.0, tf: 2.5, Ix: 135000, Sx: 4510, rx: 26.40, Iy: 11300, Sy: 750, ry: 7.62, J: 321.89, Cw: 9298828, Zx: 4917.50, Zy: 1845.00, rts: 8.48, h0: 57.5 },
+        { name: "IN 60x139", A: 176.0, d: 60.0, tw: 0.8, bf: 30.0, tf: 2.2, Ix: 122000, Sx: 4060, rx: 26.30, Iy: 9900, Sy: 660, ry: 7.49, J: 222.45, Cw: 8268579, Zx: 4433.07, Zy: 1710.00, rts: 8.39, h0: 57.8 },
+        { name: "IN 60x129", A: 165.0, d: 60.0, tw: 0.8, bf: 30.0, tf: 2.0, Ix: 113000, Sx: 3760, rx: 26.10, Iy: 9000, Sy: 600, ry: 7.39, J: 169.56, Cw: 7569000, Zx: 4107.20, Zy: 1620.00, rts: 8.33, h0: 58.0 },
+        { name: "IN 60x121", A: 154.0, d: 60.0, tw: 0.8, bf: 25.0, tf: 2.2, Ix: 103000, Sx: 3450, rx: 25.40, Iy: 5730, Sy: 459, ry: 6.09, J: 186.96, Cw: 4785057, Zx: 3797.27, Zy: 1407.50, rts: 6.93, h0: 57.8 },
+        { name: "IN 60x114", A: 145.0, d: 60.0, tw: 0.8, bf: 25.0, tf: 2.0, Ix: 95800, Sx: 3190, rx: 25.70, Iy: 5210, Sy: 417, ry: 6.00, J: 142.89, Cw: 4380208, Zx: 3527.20, Zy: 1345.00, rts: 6.88, h0: 58.0 },
+        { name: "IN 60x106", A: 135.0, d: 60.0, tw: 0.8, bf: 25.0, tf: 1.8, Ix: 88200, Sx: 2940, rx: 25.50, Iy: 4690, Sy: 375, ry: 5.89, J: 106.83, Cw: 3969422, Zx: 3255.19, Zy: 1282.50, rts: 6.81, h0: 58.2 },
+        { name: "IN 60x98.5", A: 125.0, d: 60.0, tw: 0.8, bf: 25.0, tf: 1.6, Ix: 80400, Sx: 2680, rx: 25.30, Iy: 4170, Sy: 330, ry: 5.77, J: 77.96, Cw: 3552667, Zx: 2981.25, Zy: 1220.00, rts: 6.74, h0: 58.4 },
+        { name: "IN 60x90.9", A: 116.0, d: 60.0, tw: 0.8, bf: 25.0, tf: 1.4, Ix: 72600, Sx: 2420, rx: 25.00, Iy: 3650, Sy: 292, ry: 5.61, J: 55.50, Cw: 3129911, Zx: 2705.37, Zy: 1157.50, rts: 6.65, h0: 58.6 },
+        { name: "IN 60x83.8", A: 106.0, d: 60.0, tw: 0.8, bf: 25.0, tf: 1.2, Ix: 64600, Sx: 2150, rx: 24.70, Iy: 3130, Sy: 250, ry: 5.43, J: 38.63, Cw: 2701125, Zx: 2427.55, Zy: 1095.00, rts: 6.54, h0: 58.8 },
+        { name: "IN 50x182", A: 232.0, d: 50.0, tw: 0.8, bf: 35.0, tf: 2.8, Ix: 115000, Sx: 4610, rx: 22.30, Iy: 20000, Sy: 1140, ry: 9.30, J: 519.79, Cw: 11143841, Zx: 5019.87, Zy: 2215.00, rts: 10.12, h0: 47.2 },
+        { name: "IN 50x166", A: 211.0, d: 50.0, tw: 0.8, bf: 35.0, tf: 2.5, Ix: 105000, Sx: 4200, rx: 22.30, Iy: 17900, Sy: 1020, ry: 9.20, J: 372.26, Cw: 10076742, Zx: 4561.25, Zy: 2031.25, rts: 10.06, h0: 47.5 },
+        { name: "IN 50x150", A: 190.0, d: 50.0, tw: 0.8, bf: 35.0, tf: 2.2, Ix: 94300, Sx: 3770, rx: 22.30, Iy: 15700, Sy: 898, ry: 9.09, J: 256.24, Cw: 8979897, Zx: 4096.47, Zy: 1847.50, rts: 9.98, h0: 47.8 },
+        { name: "IN 50x132", A: 168.0, d: 50.0, tw: 0.8, bf: 30.0, tf: 2.2, Ix: 81800, Sx: 3270, rx: 22.00, Iy: 9900, Sy: 660, ry: 7.67, J: 220.74, Cw: 5654979, Zx: 3570.67, Zy: 1490.00, rts: 8.51, h0: 47.8 },
+        { name: "IN 50x123", A: 157.0, d: 50.0, tw: 0.8, bf: 30.0, tf: 2.0, Ix: 75600, Sx: 3030, rx: 22.00, Iy: 9000, Sy: 600, ry: 7.58, J: 167.85, Cw: 5184000, Zx: 3303.20, Zy: 1400.00, rts: 8.44, h0: 48.0 },
+        { name: "IN 50x114", A: 145.0, d: 50.0, tw: 0.8, bf: 30.0, tf: 1.8, Ix: 69400, Sx: 2780, rx: 21.90, Iy: 8100, Sy: 540, ry: 7.47, J: 124.56, Cw: 4704561, Zx: 3033.39, Zy: 1310.00, rts: 8.38, h0: 48.2 },
+        { name: "IN 50x105", A: 133.0, d: 50.0, tw: 0.8, bf: 30.0, tf: 1.6, Ix: 63100, Sx: 2520, rx: 21.70, Iy: 7200, Sy: 480, ry: 7.35, J: 89.91, Cw: 4216608, Zx: 2761.25, Zy: 1220.00, rts: 8.32, h0: 48.4 },
+        { name: "IN 50x99.8", A: 127.0, d: 50.0, tw: 0.8, bf: 25.0, tf: 1.8, Ix: 59000, Sx: 2360, rx: 21.50, Iy: 4690, Sy: 375, ry: 6.07, J: 105.12, Cw: 2722547, Zx: 2599.59, Zy: 1062.50, rts: 6.92, h0: 48.2 },
+        { name: "IN 50x92.2", A: 117.0, d: 50.0, tw: 0.8, bf: 25.0, tf: 1.6, Ix: 53700, Sx: 2150, rx: 21.40, Iy: 4170, Sy: 333, ry: 5.96, J: 76.25, Cw: 2440167, Zx: 2374.05, Zy: 1000.00, rts: 6.85, h0: 48.4 },
+        { name: "IN 50x84.6", A: 108.0, d: 50.0, tw: 0.8, bf: 25.0, tf: 1.4, Ix: 48400, Sx: 1930, rx: 21.20, Iy: 3650, Sy: 292, ry: 5.82, J: 53.79, Cw: 2152828, Zx: 2146.57, Zy: 937.50, rts: 6.78, h0: 48.6 },
+        { name: "IN 50x77", A: 98.1, d: 50.0, tw: 0.8, bf: 25.0, tf: 1.2, Ix: 42900, Sx: 1720, rx: 20.90, Iy: 3130, Sy: 250, ry: 5.65, J: 36.92, Cw: 1860500, Zx: 1917.15, Zy: 875.00, rts: 6.66, h0: 48.8 },
+        { name: "IN 45x157", A: 200.0, d: 45.0, tw: 0.8, bf: 30.0, tf: 2.8, Ix: 79000, Sx: 3510, rx: 19.90, Iy: 12600, Sy: 840, ry: 7.95, J: 445.76, Cw: 5609646, Zx: 3855.27, Zy: 1665.00, rts: 8.70, h0: 42.2 },
+        { name: "IN 45x143", A: 182.0, d: 45.0, tw: 0.8, bf: 30.0, tf: 2.5, Ix: 72100, Sx: 3200, rx: 19.90, Iy: 11300, Sy: 750, ry: 7.86, J: 319.33, Cw: 5080078, Zx: 3507.50, Zy: 1530.00, rts: 8.65, h0: 42.5 },
+        { name: "IN 45x129", A: 164.0, d: 45.0, tw: 0.8, bf: 30.0, tf: 2.2, Ix: 65000, Sx: 2890, rx: 19.90, Iy: 9900, Sy: 660, ry: 7.76, J: 219.89, Cw: 4533804, Zx: 3154.47, Zy: 1395.00, rts: 8.56, h0: 42.8 },
+        { name: "IN 45x120", A: 153.0, d: 45.0, tw: 0.8, bf: 30.0, tf: 2.0, Ix: 60100, Sx: 2670, rx: 19.80, Iy: 9000, Sy: 600, ry: 7.68, J: 167.00, Cw: 4160250, Zx: 2916.20, Zy: 1305.00, rts: 8.51, h0: 43.0 },
+        { name: "IN 45x112", A: 142.0, d: 45.0, tw: 0.8, bf: 25.0, tf: 2.2, Ix: 54900, Sx: 2440, rx: 19.60, Iy: 5730, Sy: 458, ry: 6.34, J: 184.40, Cw: 2623729, Zx: 2683.67, Zy: 1092.50, rts: 7.09, h0: 42.8 },
+        { name: "IN 45x104", A: 133.0, d: 45.0, tw: 0.8, bf: 25.0, tf: 2.0, Ix: 50900, Sx: 2260, rx: 19.60, Iy: 5210, Sy: 417, ry: 6.26, J: 140.33, Cw: 2407552, Zx: 2486.20, Zy: 1030.00, rts: 7.04, h0: 43.0 },
+        { name: "IN 45x96.6", A: 123.0, d: 45.0, tw: 0.8, bf: 25.0, tf: 1.8, Ix: 46700, Sx: 2080, rx: 19.50, Iy: 4690, Sy: 375, ry: 6.17, J: 104.27, Cw: 2187000, Zx: 2286.79, Zy: 967.50, rts: 6.98, h0: 43.2 },
+        { name: "IN 45x89.1", A: 113.0, d: 45.0, tw: 0.8, bf: 25.0, tf: 1.6, Ix: 42600, Sx: 1890, rx: 19.40, Iy: 4170, Sy: 333, ry: 6.06, J: 75.40, Cw: 1962042, Zx: 2085.45, Zy: 905.00, rts: 6.92, h0: 43.4 },
+        { name: "IN 45x82.5", A: 105.0, d: 45.0, tw: 0.8, bf: 20.0, tf: 1.8, Ix: 38300, Sx: 1700, rx: 19.10, Iy: 2400, Sy: 240, ry: 4.78, J: 84.83, Cw: 1119744, Zx: 1897.99, Zy: 765.00, rts: 5.52, h0: 43.2 },
+        { name: "IN 45x76.5", A: 97.4, d: 45.0, tw: 0.8, bf: 20.0, tf: 1.6, Ix: 35000, Sx: 1560, rx: 19.00, Iy: 2140, Sy: 214, ry: 4.68, J: 61.75, Cw: 1004565, Zx: 1738.25, Zy: 725.00, rts: 5.45, h0: 43.4 },
+        { name: "IN 45x70.5", A: 89.8, d: 45.0, tw: 0.8, bf: 20.0, tf: 1.4, Ix: 31600, Sx: 1410, rx: 18.80, Iy: 1870, Sy: 187, ry: 4.56, J: 43.79, Cw: 887115, Zx: 1576.97, Zy: 685.00, rts: 5.37, h0: 43.6 },
+        { name: "IN 45x64.4", A: 82.1, d: 45.0, tw: 0.8, bf: 20.0, tf: 1.2, Ix: 28200, Sx: 1250, rx: 18.50, Iy: 1600, Sy: 160, ry: 4.42, J: 30.31, Cw: 767376, Zx: 1414.15, Zy: 645.00, rts: 5.29, h0: 43.8 },
+        { name: "IN 40x140", A: 178.0, d: 40.0, tw: 0.8, bf: 30.0, tf: 2.5, Ix: 55700, Sx: 2780, rx: 17.70, Iy: 11300, Sy: 750, ry: 7.95, J: 318.47, Cw: 3955078, Zx: 3057.50, Zy: 1445.00, rts: 8.72, h0: 37.5 },
+        { name: "IN 40x126", A: 160.0, d: 40.0, tw: 0.8, bf: 30.0, tf: 2.2, Ix: 50200, Sx: 2510, rx: 17.70, Iy: 9900, Sy: 660, ry: 7.85, J: 219.04, Cw: 3536379, Zx: 2748.27, Zy: 1310.00, rts: 8.63, h0: 37.8 },
+        { name: "IN 40x111", A: 142.0, d: 40.0, tw: 0.6, bf: 30.0, tf: 2.0, Ix: 45700, Sx: 2280, rx: 16.00, Iy: 9000, Sy: 600, ry: 7.97, J: 162.59, Cw: 3249000, Zx: 2474.40, Zy: 1140.00, rts: 8.66, h0: 38.0 },
+        { name: "IN 40x109", A: 138.0, d: 40.0, tw: 0.8, bf: 25.0, tf: 2.2, Ix: 42300, Sx: 2120, rx: 17.50, Iy: 5730, Sy: 458, ry: 6.43, J: 183.54, Cw: 2046516, Zx: 2332.47, Zy: 1007.50, rts: 7.15, h0: 37.8 },
+        { name: "IN 40x95.5", A: 122.0, d: 40.0, tw: 0.6, bf: 25.0, tf: 2.0, Ix: 38500, Sx: 1920, rx: 17.80, Iy: 5210, Sy: 417, ry: 6.54, J: 135.93, Cw: 1880208, Zx: 2094.40, Zy: 865.00, rts: 7.18, h0: 38.0 },
+        { name: "IN 40x87.8", A: 112.0, d: 40.0, tw: 0.6, bf: 25.0, tf: 1.8, Ix: 35300, Sx: 1760, rx: 17.80, Iy: 4690, Sy: 375, ry: 6.47, J: 99.82, Cw: 1710047, Zx: 1917.74, Zy: 802.50, rts: 7.13, h0: 38.2 },
+        { name: "IN 40x80.1", A: 102.0, d: 40.0, tw: 0.6, bf: 25.0, tf: 1.6, Ix: 32000, Sx: 1600, rx: 17.70, Iy: 4170, Sy: 333, ry: 6.39, J: 70.92, Cw: 1536000, Zx: 1739.14, Zy: 740.00, rts: 7.07, h0: 38.4 },
+        { name: "IN 40x73.7", A: 93.8, d: 40.0, tw: 0.6, bf: 20.0, tf: 1.8, Ix: 28700, Sx: 1430, rx: 17.50, Iy: 2400, Sy: 240, ry: 5.06, J: 80.38, Cw: 875544, Zx: 1573.94, Zy: 600.00, rts: 5.66, h0: 38.2 },
+        { name: "IN 40x67.6", A: 86.1, d: 40.0, tw: 0.6, bf: 20.0, tf: 1.6, Ix: 26100, Sx: 1300, rx: 17.40, Iy: 2130, Sy: 213, ry: 4.98, J: 57.26, Cw: 786432, Zx: 1431.94, Zy: 560.00, rts: 5.61, h0: 38.4 },
+        { name: "IN 40x61.5", A: 78.3, d: 40.0, tw: 0.6, bf: 20.0, tf: 1.4, Ix: 23400, Sx: 1170, rx: 17.30, Iy: 1870, Sy: 187, ry: 4.88, J: 39.27, Cw: 695315, Zx: 1288.38, Zy: 520.00, rts: 5.55, h0: 38.6 },
+        { name: "IN 40x55.4", A: 70.6, d: 40.0, tw: 0.6, bf: 20.0, tf: 1.2, Ix: 20700, Sx: 1040, rx: 17.10, Iy: 1600, Sy: 160, ry: 4.76, J: 25.75, Cw: 602176, Zx: 1143.26, Zy: 480.00, rts: 5.46, h0: 38.8 },
+        { name: "IN 40x49.3", A: 62.8, d: 40.0, tw: 0.6, bf: 20.0, tf: 1.0, Ix: 18000, Sx: 898, rx: 16.90, Iy: 1330, Sy: 133, ry: 4.61, J: 16.07, Cw: 507000, Zx: 996.60, Zy: 440.00, rts: 5.38, h0: 39.0 },
+        { name: "IN 35x137", A: 174.0, d: 35.0, tw: 0.8, bf: 30.0, tf: 2.5, Ix: 41500, Sx: 2370, rx: 15.40, Iy: 11300, Sy: 750, ry: 8.04, J: 317.62, Cw: 2970703, Zx: 2617.50, Zy: 1370.00, rts: 8.79, h0: 32.5 },
+        { name: "IN 35x123", A: 156.0, d: 35.0, tw: 0.8, bf: 30.0, tf: 2.2, Ix: 37500, Sx: 2140, rx: 15.50, Iy: 9900, Sy: 660, ry: 7.95, J: 218.18, Cw: 2662704, Zx: 2352.07, Zy: 1235.00, rts: 8.71, h0: 32.8 },
+        { name: "IN 35x109", A: 139.0, d: 35.0, tw: 0.6, bf: 30.0, tf: 2.0, Ix: 34200, Sx: 1950, rx: 15.70, Iy: 9000, Sy: 600, ry: 8.06, J: 162.23, Cw: 2450250, Zx: 2124.15, Zy: 1083.75, rts: 8.73, h0: 33.0 },
+        { name: "IN 35x106", A: 134.0, d: 35.0, tw: 0.8, bf: 25.0, tf: 2.2, Ix: 31500, Sx: 1800, rx: 15.30, Iy: 5730, Sy: 458, ry: 6.53, J: 182.69, Cw: 1540917, Zx: 1991.27, Zy: 932.50, rts: 7.23, h0: 32.8 },
+        { name: "IN 35x93.1", A: 119.0, d: 35.0, tw: 0.6, bf: 25.0, tf: 2.0, Ix: 28700, Sx: 1640, rx: 15.60, Iy: 5210, Sy: 417, ry: 6.63, J: 135.57, Cw: 1417969, Zx: 1794.15, Zy: 808.75, rts: 7.24, h0: 33.0 },
+        { name: "IN 35x85.4", A: 109.0, d: 35.0, tw: 0.6, bf: 25.0, tf: 1.8, Ix: 26400, Sx: 1510, rx: 15.60, Iy: 4690, Sy: 375, ry: 6.56, J: 99.46, Cw: 1291688, Zx: 1641.89, Zy: 746.25, rts: 7.18, h0: 33.2 },
+        { name: "IN 35x77.8", A: 99.1, d: 35.0, tw: 0.6, bf: 25.0, tf: 1.6, Ix: 23900, Sx: 1370, rx: 15.50, Iy: 4170, Sy: 333, ry: 6.49, J: 70.56, Cw: 1162042, Zx: 1487.69, Zy: 683.75, rts: 7.13, h0: 33.4 },
+        { name: "IN 35x71.3", A: 90.8, d: 35.0, tw: 0.6, bf: 20.0, tf: 1.8, Ix: 21400, Sx: 1220, rx: 15.40, Iy: 2400, Sy: 240, ry: 5.14, J: 80.02, Cw: 661344, Zx: 1343.09, Zy: 543.75, rts: 5.71, h0: 33.2 },
+        { name: "IN 35x65.2", A: 83.1, d: 35.0, tw: 0.6, bf: 20.0, tf: 1.6, Ix: 19500, Sx: 1110, rx: 15.30, Iy: 2130, Sy: 213, ry: 5.07, J: 56.90, Cw: 594965, Zx: 1220.49, Zy: 503.75, rts: 5.66, h0: 33.4 },
+        { name: "IN 35x59.1", A: 75.3, d: 35.0, tw: 0.6, bf: 20.0, tf: 1.4, Ix: 17500, Sx: 999, rx: 15.20, Iy: 1870, Sy: 187, ry: 4.98, J: 38.91, Cw: 526848, Zx: 1096.33, Zy: 463.75, rts: 5.61, h0: 33.6 },
+        { name: "IN 35x53", A: 67.6, d: 35.0, tw: 0.6, bf: 20.0, tf: 1.2, Ix: 15400, Sx: 883, rx: 15.10, Iy: 1600, Sy: 160, ry: 4.87, J: 25.39, Cw: 456976, Zx: 970.61, Zy: 423.75, rts: 5.53, h0: 33.8 },
+        { name: "IN 35x46.9", A: 59.8, d: 35.0, tw: 0.6, bf: 20.0, tf: 1.0, Ix: 13400, Sx: 763, rx: 14.90, Iy: 1330, Sy: 133, ry: 4.72, J: 15.71, Cw: 385333, Zx: 843.35, Zy: 383.75, rts: 5.45, h0: 34.0 },
+        { name: "IN 30x102", A: 130.0, d: 30.0, tw: 0.8, bf: 25.0, tf: 2.2, Ix: 22400, Sx: 1490, rx: 13.10, Iy: 5730, Sy: 458, ry: 6.63, J: 181.84, Cw: 1106932, Zx: 1660.07, Zy: 867.50, rts: 7.31, h0: 27.8 },
+        { name: "IN 30x90.7", A: 116.0, d: 30.0, tw: 0.6, bf: 25.0, tf: 2.0, Ix: 20500, Sx: 1370, rx: 13.30, Iy: 5210, Sy: 417, ry: 6.71, J: 135.21, Cw: 1020833, Zx: 1501.40, Zy: 760.00, rts: 7.30, h0: 28.0 },
+        { name: "IN 30x83.1", A: 106.0, d: 30.0, tw: 0.6, bf: 25.0, tf: 1.8, Ix: 18800, Sx: 1260, rx: 13.30, Iy: 4690, Sy: 375, ry: 6.66, J: 99.10, Cw: 931922, Zx: 1373.54, Zy: 697.50, rts: 7.24, h0: 28.2 },
+        { name: "IN 30x75.4", A: 96.1, d: 30.0, tw: 0.6, bf: 25.0, tf: 1.6, Ix: 17100, Sx: 1140, rx: 13.30, Iy: 4170, Sy: 333, ry: 6.59, J: 70.20, Cw: 840167, Zx: 1243.74, Zy: 635.00, rts: 7.21, h0: 28.4 },
+        { name: "IN 30x69", A: 87.8, d: 30.0, tw: 0.6, bf: 20.0, tf: 1.8, Ix: 15300, Sx: 1020, rx: 13.20, Iy: 2400, Sy: 240, ry: 5.23, J: 79.66, Cw: 477144, Zx: 1119.74, Zy: 495.00, rts: 5.76, h0: 28.2 },
+        { name: "IN 30x62.9", A: 80.1, d: 30.0, tw: 0.6, bf: 20.0, tf: 1.6, Ix: 13900, Sx: 925, rx: 13.20, Iy: 2130, Sy: 213, ry: 5.16, J: 56.54, Cw: 430165, Zx: 1016.54, Zy: 455.00, rts: 5.72, h0: 28.4 },
+        { name: "IN 30x56.8", A: 72.3, d: 30.0, tw: 0.6, bf: 20.0, tf: 1.4, Ix: 12500, Sx: 831, rx: 13.10, Iy: 1870, Sy: 187, ry: 5.08, J: 38.55, Cw: 381715, Zx: 911.78, Zy: 415.00, rts: 5.67, h0: 28.6 },
+        { name: "IN 30x50.7", A: 64.6, d: 30.0, tw: 0.6, bf: 20.0, tf: 1.2, Ix: 11000, Sx: 734, rx: 13.10, Iy: 1600, Sy: 160, ry: 4.98, J: 25.03, Cw: 331776, Zx: 805.46, Zy: 375.00, rts: 5.60, h0: 28.8 },
+        { name: "IN 30x44.6", A: 56.8, d: 30.0, tw: 0.6, bf: 20.0, tf: 1.0, Ix: 95100, Sx: 634, rx: 12.90, Iy: 1330, Sy: 133, ry: 4.85, J: 15.35, Cw: 280333, Zx: 697.60, Zy: 335.00, rts: 5.52, h0: 29.0 },
+        { name: "IN 30x41.3", A: 52.6, d: 30.0, tw: 0.6, bf: 15.0, tf: 1.2, Ix: 8520, Sx: 268, rx: 12.70, Iy: 675, Sy: 90.1, ry: 3.58, J: 19.27, Cw: 139968, Zx: 632.66, Zy: 270.00, rts: 6.02, h0: 28.8 },
+        { name: "IN 30x36.7", A: 46.8, d: 30.0, tw: 0.6, bf: 15.0, tf: 1.0, Ix: 7410, Sx: 494, rx: 12.60, Iy: 563, Sy: 75.1, ry: 3.47, J: 12.02, Cw: 118266, Zx: 552.60, Zy: 247.50, rts: 4.06, h0: 29.0 },
+        { name: "IN 30x32.2", A: 41.0, d: 30.0, tw: 0.6, bf: 15.0, tf: 0.8, Ix: 6260, Sx: 417, rx: 12.40, Iy: 451, Sy: 60.1, ry: 3.31, J: 7.16, Cw: 95922, Zx: 471.38, Zy: 225.00, rts: 3.97, h0: 29.2 },
+        { name: "IN 25x72.7", A: 92.6, d: 25.0, tw: 0.6, bf: 20.0, tf: 2.0, Ix: 11100, Sx: 886, rx: 10.90, Iy: 2670, Sy: 267, ry: 5.37, J: 108.18, Cw: 352667, Zx: 986.15, Zy: 493.75, rts: 5.89, h0: 23.0 },
+        { name: "IN 25x66.6", A: 84.8, d: 25.0, tw: 0.6, bf: 20.0, tf: 1.8, Ix: 10200, Sx: 816, rx: 11.00, Iy: 2400, Sy: 240, ry: 5.32, J: 79.30, Cw: 322944, Zx: 903.89, Zy: 453.75, rts: 5.84, h0: 23.2 },
+        { name: "IN 25x60.5", A: 77.1, d: 25.0, tw: 0.6, bf: 20.0, tf: 1.6, Ix: 9290, Sx: 743, rx: 11.00, Iy: 2130, Sy: 213, ry: 5.26, J: 56.18, Cw: 292032, Zx: 820.09, Zy: 413.75, rts: 5.79, h0: 23.4 },
+        { name: "IN 25x54.4", A: 69.3, d: 25.0, tw: 0.6, bf: 20.0, tf: 1.4, Ix: 8350, Sx: 668, rx: 11.00, Iy: 1870, Sy: 187, ry: 5.19, J: 38.19, Cw: 259915, Zx: 734.73, Zy: 373.75, rts: 5.74, h0: 23.6 },
+        { name: "IN 25x46.6", A: 59.3, d: 25.0, tw: 0.5, bf: 20.0, tf: 1.2, Ix: 7280, Sx: 583, rx: 11.10, Iy: 1600, Sy: 160, ry: 5.19, J: 23.98, Cw: 226576, Zx: 635.05, Zy: 318.13, rts: 5.71, h0: 23.8 },
+        { name: "IN 25x43.4", A: 55.3, d: 25.0, tw: 0.6, bf: 15.0, tf: 1.4, Ix: 6400, Sx: 512, rx: 10.80, Iy: 788, Sy: 105, ry: 3.77, J: 29.04, Cw: 109652, Zx: 569.53, Zy: 251.25, rts: 4.26, h0: 23.6 },
+        { name: "IN 25x37.1", A: 47.3, d: 25.0, tw: 0.6, bf: 15.0, tf: 1.2, Ix: 5580, Sx: 447, rx: 10.90, Iy: 675, Sy: 90, ry: 3.78, J: 18.91, Cw: 95587, Zx: 505.01, Zy: 228.75, rts: 4.24, h0: 23.8 },
+        { name: "IN 25x32.6", A: 41.3, d: 25.0, tw: 0.6, bf: 15.0, tf: 1.0, Ix: 4830, Sx: 386, rx: 10.80, Iy: 563, Sy: 75, ry: 3.68, J: 11.66, Cw: 81000, Zx: 439.35, Zy: 206.25, rts: 4.18, h0: 24.0 },
+        { name: "IN 25x27.7", A: 35.3, d: 25.0, tw: 0.6, bf: 10.0, tf: 1.2, Ix: 3880, Sx: 311, rx: 10.50, Iy: 200, Sy: 40, ry: 2.38, J: 13.15, Cw: 28322, Zx: 362.21, Zy: 153.75, rts: 2.77, h0: 23.8 },
+        { name: "IN 25x24.7", A: 31.5, d: 25.0, tw: 0.6, bf: 10.0, tf: 1.0, Ix: 3390, Sx: 271, rx: 10.40, Iy: 167, Sy: 33.4, ry: 2.30, J: 8.32, Cw: 24000, Zx: 319.35, Zy: 143.75, rts: 2.72, h0: 24.0 },
+        { name: "IN 25x21.7", A: 27.7, d: 25.0, tw: 0.6, bf: 10.0, tf: 0.8, Ix: 2880, Sx: 230, rx: 10.20, Iy: 134, Sy: 26.7, ry: 2.20, J: 5.10, Cw: 19521, Zx: 275.73, Zy: 133.75, rts: 2.65, h0: 24.2 },
+        { name: "IN 25x18.8", A: 23.9, d: 25.0, tw: 0.6, bf: 10.0, tf: 0.6, Ix: 2350, Sx: 188, rx: 9.91, Iy: 100, Sy: 20, ry: 2.05, J: 3.15, Cw: 14884, Zx: 231.37, Zy: 123.75, rts: 2.55, h0: 24.4 },
+        { name: "IN 20x50.1", A: 63.8, d: 20.0, tw: 0.6, bf: 15.0, tf: 1.8, Ix: 4710, Sx: 471, rx: 8.59, Iy: 1010, Sy: 135, ry: 3.98, J: 59.50, Cw: 83845, Zx: 531.74, Zy: 262.50, rts: 4.42, h0: 18.2 },
+        { name: "IN 20x45.6", A: 58.1, d: 20.0, tw: 0.6, bf: 15.0, tf: 1.6, Ix: 4310, Sx: 431, rx: 8.61, Iy: 900, Sy: 120, ry: 3.94, J: 42.17, Cw: 76176, Zx: 483.94, Zy: 240.00, rts: 4.38, h0: 18.4 },
+        { name: "IN 20x41.1", A: 52.3, d: 20.0, tw: 0.5, bf: 15.0, tf: 1.4, Ix: 3890, Sx: 389, rx: 8.63, Iy: 788, Sy: 105, ry: 3.88, J: 28.16, Cw: 68111, Zx: 427.58, Zy: 207.50, rts: 4.34, h0: 18.6 },
+        { name: "IN 20x35.2", A: 44.8, d: 20.0, tw: 0.5, bf: 15.0, tf: 1.2, Ix: 3410, Sx: 341, rx: 8.73, Iy: 675, Sy: 90, ry: 3.88, J: 18.01, Cw: 59643, Zx: 377.12, Zy: 185.00, rts: 4.31, h0: 18.8 },
+        { name: "IN 20x30.6", A: 39.0, d: 20.0, tw: 0.5, bf: 15.0, tf: 1.0, Ix: 2950, Sx: 295, rx: 8.70, Iy: 563, Sy: 75, ry: 3.80, J: 10.75, Cw: 50766, Zx: 325.50, Zy: 162.50, rts: 4.26, h0: 19.0 },
+        { name: "IN 20x25.7", A: 32.8, d: 20.0, tw: 0.5, bf: 10.0, tf: 1.2, Ix: 2350, Sx: 235, rx: 8.47, Iy: 200, Sy: 40, ry: 2.47, J: 12.25, Cw: 17672, Zx: 264.32, Zy: 110.00, rts: 2.83, h0: 18.8 },
+        { name: "IN 20x22.8", A: 29.0, d: 20.0, tw: 0.5, bf: 10.0, tf: 1.0, Ix: 2050, Sx: 205, rx: 8.41, Iy: 167, Sy: 33.4, ry: 2.40, J: 7.42, Cw: 15042, Zx: 230.50, Zy: 100.00, rts: 2.78, h0: 19.0 },
+        { name: "IN 20x19.8", A: 25.2, d: 20.0, tw: 0.5, bf: 10.0, tf: 0.8, Ix: 1730, Sx: 173, rx: 8.30, Iy: 134, Sy: 26.7, ry: 2.30, J: 4.18, Cw: 12288, Zx: 195.92, Zy: 90.00, rts: 2.72, h0: 19.2 },
+        { name: "IN 20x16.8", A: 21.4, d: 20.0, tw: 0.5, bf: 10.0, tf: 0.6, Ix: 1410, Sx: 141, rx: 8.11, Iy: 100, Sy: 20, ry: 2.16, J: 2.22, Cw: 9409, Zx: 160.58, Zy: 80.00, rts: 2.62, h0: 19.4 },
+        { name: "IN 20x13.8", A: 17.6, d: 20.0, tw: 0.4, bf: 10.0, tf: 0.5, Ix: 1180, Sx: 117, rx: 8.19, Iy: 83, Sy: 16.7, ry: 2.18, J: 1.24, Cw: 7922, Zx: 133.60, Zy: 65.00, rts: 2.63, h0: 19.5 },
+        { name: "HN 50x462", A: 588.0, d: 50.0, tw: 2.2, bf: 50.0, tf: 5.0, Ix: 266000, Sx: 10600, rx: 21.30, Iy: 104000, Sy: 4170, ry: 13.30, J: 4308.64, Cw: 52734375, Zx: 12130.00, Zy: 7625.00, rts: 14.86, h0: 45.0 },
+        { name: "HN 50x380", A: 484.0, d: 50.0, tw: 2.0, bf: 50.0, tf: 4.0, Ix: 224000, Sx: 8980, rx: 21.50, Iy: 83400, Sy: 3330, ry: 13.10, J: 2245.33, Cw: 44083333, Zx: 10082.00, Zy: 6250.00, rts: 14.61, h0: 46.0 },
+        { name: "HN 50x336", A: 427.0, d: 50.0, tw: 1.8, bf: 50.0, tf: 3.5, Ix: 201000, Sx: 8060, rx: 21.70, Iy: 72900, Sy: 2920, ry: 13.10, J: 1512.76, Cw: 39416016, Zx: 8969.55, Zy: 5500.00, rts: 14.50, h0: 46.5 },
+        { name: "HN 50x306", A: 390.0, d: 50.0, tw: 1.6, bf: 50.0, tf: 3.2, Ix: 187000, Sx: 7460, rx: 21.90, Iy: 66700, Sy: 2670, ry: 13.10, J: 1151.80, Cw: 36504000, Zx: 8248.38, Zy: 5000.00, rts: 14.46, h0: 46.8 },
+        { name: "HN 50x269", A: 342.0, d: 50.0, tw: 1.4, bf: 50.0, tf: 2.8, Ix: 166000, Sx: 6650, rx: 22.00, Iy: 58300, Sy: 2330, ry: 13.10, J: 772.34, Cw: 32489333, Zx: 7297.98, Zy: 4375.00, rts: 14.39, h0: 47.2 },
+        { name: "HN 50x246", A: 313.0, d: 50.0, tw: 1.4, bf: 50.0, tf: 2.5, Ix: 152000, Sx: 6070, rx: 22.00, Iy: 52100, Sy: 2080, ry: 12.90, J: 561.99, Cw: 29378255, Zx: 6646.25, Zy: 4000.00, rts: 14.28, h0: 47.5 },
+        { name: "HN 50x223", A: 284.0, d: 50.0, tw: 1.4, bf: 50.0, tf: 2.2, Ix: 137000, Sx: 5470, rx: 22.00, Iy: 45800, Sy: 1830, ry: 12.70, J: 396.64, Cw: 26180458, Zx: 5985.78, Zy: 3625.00, rts: 14.15, h0: 47.8 },
+        { name: "HN 50x208", A: 264.0, d: 50.0, tw: 1.4, bf: 50.0, tf: 2.0, Ix: 127000, Sx: 5060, rx: 21.90, Iy: 41700, Sy: 1670, ry: 12.60, J: 308.74, Cw: 24000000, Zx: 5540.60, Zy: 3375.00, rts: 14.06, h0: 48.0 },
+        { name: "HN 50x192", A: 245.0, d: 50.0, tw: 1.4, bf: 50.0, tf: 1.8, Ix: 116000, Sx: 4650, rx: 21.80, Iy: 37500, Sy: 1500, ry: 12.40, J: 236.84, Cw: 21780375, Zx: 5091.54, Zy: 3125.00, rts: 13.94, h0: 48.2 },
+        { name: "HN 50x177", A: 226.0, d: 50.0, tw: 1.4, bf: 50.0, tf: 1.6, Ix: 106000, Sx: 4230, rx: 21.60, Iy: 33300, Sy: 1330, ry: 12.20, J: 179.34, Cw: 19521333, Zx: 4638.58, Zy: 2875.00, rts: 13.81, h0: 48.4 },
+        { name: "HN 45x341", A: 434.0, d: 45.0, tw: 2.0, bf: 45.0, tf: 4.0, Ix: 160000, Sx: 7120, rx: 19.20, Iy: 60800, Sy: 2700, ry: 11.80, J: 2018.67, Cw: 25530188, Zx: 8064.50, Zy: 5062.50, rts: 13.23, h0: 41.0 },
+        { name: "HN 45x301", A: 383.0, d: 45.0, tw: 1.8, bf: 45.0, tf: 3.5, Ix: 144000, Sx: 6410, rx: 19.40, Iy: 53200, Sy: 2360, ry: 11.80, J: 1360.12, Cw: 22887088, Zx: 7186.05, Zy: 4455.00, rts: 13.12, h0: 41.5 },
+        { name: "HN 45x275", A: 350.0, d: 45.0, tw: 1.6, bf: 45.0, tf: 3.2, Ix: 134000, Sx: 5940, rx: 19.60, Iy: 48600, Sy: 2160, ry: 11.80, J: 1035.74, Cw: 21228966, Zx: 6615.18, Zy: 4050.00, rts: 13.08, h0: 41.8 },
+        { name: "HN 45x241", A: 307.0, d: 45.0, tw: 1.4, bf: 45.0, tf: 2.8, Ix: 119000, Sx: 5310, rx: 19.70, Iy: 42500, Sy: 1890, ry: 11.80, J: 694.60, Cw: 18932555, Zx: 5860.53, Zy: 3543.75, rts: 13.00, h0: 42.2 },
+        { name: "HN 45x214", A: 273.0, d: 45.0, tw: 1.2, bf: 45.0, tf: 2.5, Ix: 108000, Sx: 4810, rx: 19.90, Iy: 38000, Sy: 1690, ry: 11.80, J: 491.79, Cw: 17145264, Zx: 5261.25, Zy: 3138.75, rts: 12.95, h0: 42.5 },
+        { name: "HN 45x194", A: 247.0, d: 45.0, tw: 1.2, bf: 45.0, tf: 2.2, Ix: 97400, Sx: 4330, rx: 19.90, Iy: 33400, Sy: 1490, ry: 11.60, J: 342.83, Cw: 15301589, Zx: 4731.71, Zy: 2835.00, rts: 12.85, h0: 42.8 },
+        { name: "HN 45x180", A: 229.0, d: 45.0, tw: 1.2, bf: 45.0, tf: 2.0, Ix: 90200, Sx: 4010, rx: 19.80, Iy: 30400, Sy: 1350, ry: 11.50, J: 263.62, Cw: 14040844, Zx: 4374.30, Zy: 2632.50, rts: 12.76, h0: 43.0 },
+        { name: "HN 45x166", A: 212.0, d: 45.0, tw: 1.2, bf: 45.0, tf: 1.8, Ix: 82700, Sx: 3680, rx: 19.80, Iy: 27300, Sy: 1220, ry: 11.40, J: 198.81, Cw: 12754584, Zx: 4013.39, Zy: 2430.00, rts: 12.66, h0: 43.2 },
+        { name: "HN 45x152", A: 194.0, d: 45.0, tw: 1.2, bf: 45.0, tf: 1.6, Ix: 75100, Sx: 3340, rx: 19.70, Iy: 24300, Sy: 1080, ry: 11.20, J: 146.96, Cw: 11442627, Zx: 3648.97, Zy: 2227.50, rts: 12.56, h0: 43.4 },
+        { name: "HN 45x139", A: 177.0, d: 45.0, tw: 1.2, bf: 45.0, tf: 1.4, Ix: 67400, Sx: 3000, rx: 19.50, Iy: 21300, Sy: 945, ry: 11.00, J: 106.63, Cw: 10104791, Zx: 3281.05, Zy: 2025.00, rts: 12.44, h0: 43.6 },
+        { name: "HN 40x301", A: 384.0, d: 40.0, tw: 2.0, bf: 40.0, tf: 4.0, Ix: 110000, Sx: 5480, rx: 16.90, Iy: 42700, Sy: 2130, ry: 10.50, J: 1792.00, Cw: 13824000, Zx: 6272.00, Zy: 4000.00, rts: 11.84, h0: 36.0 },
+        { name: "HN 40x266", A: 339.0, d: 40.0, tw: 1.8, bf: 40.0, tf: 3.5, Ix: 98900, Sx: 4950, rx: 17.10, Iy: 37300, Sy: 1870, ry: 10.50, J: 1207.49, Cw: 12434333, Zx: 5600.05, Zy: 3520.00, rts: 11.73, h0: 36.5 },
+        { name: "HN 40x243", A: 310.0, d: 40.0, tw: 1.6, bf: 40.0, tf: 3.2, Ix: 91900, Sx: 4600, rx: 17.20, Iy: 34100, Sy: 1710, ry: 10.50, J: 919.69, Cw: 11556181, Zx: 5161.98, Zy: 3200.00, rts: 11.68, h0: 36.8 },
+        { name: "HN 40x214", A: 272.0, d: 40.0, tw: 1.4, bf: 40.0, tf: 2.8, Ix: 82400, Sx: 4120, rx: 17.40, Iy: 29900, Sy: 1490, ry: 10.50, J: 616.85, Cw: 10332672, Zx: 4580.58, Zy: 2800.00, rts: 11.62, h0: 37.2 },
+        { name: "HN 40x190", A: 242.0, d: 40.0, tw: 1.2, bf: 40.0, tf: 2.5, Ix: 74700, Sx: 3740, rx: 17.60, Iy: 26700, Sy: 1330, ry: 10.50, J: 436.83, Cw: 9375000, Zx: 4117.50, Zy: 2480.00, rts: 11.57, h0: 37.5 },
+        { name: "HN 40x172", A: 219.0, d: 40.0, tw: 1.2, bf: 40.0, tf: 2.2, Ix: 67500, Sx: 3370, rx: 17.60, Iy: 23500, Sy: 1170, ry: 10.40, J: 304.45, Cw: 8382528, Zx: 3706.61, Zy: 2240.00, rts: 11.48, h0: 37.8 },
+        { name: "HN 40x160", A: 203.0, d: 40.0, tw: 1.2, bf: 40.0, tf: 2.0, Ix: 62500, Sx: 3120, rx: 17.50, Iy: 21300, Sy: 1070, ry: 10.20, J: 234.07, Cw: 7701333, Zx: 3428.80, Zy: 2080.00, rts: 11.39, h0: 38.0 },
+        { name: "HN 40x147", A: 188.0, d: 40.0, tw: 1.2, bf: 40.0, tf: 1.8, Ix: 57400, Sx: 2870, rx: 17.50, Iy: 19200, Sy: 960, ry: 10.10, J: 176.49, Cw: 7004352, Zx: 3147.89, Zy: 1920.00, rts: 11.30, h0: 38.2 },
+        { name: "HN 40x135", A: 172.0, d: 40.0, tw: 1.2, bf: 40.0, tf: 1.6, Ix: 52200, Sx: 2610, rx: 17.40, Iy: 17100, Sy: 854, ry: 9.96, J: 130.42, Cw: 6291456, Zx: 2863.87, Zy: 1760.00, rts: 11.21, h0: 38.4 },
+        { name: "HN 40x123", A: 157.0, d: 40.0, tw: 1.2, bf: 40.0, tf: 1.4, Ix: 46900, Sx: 2340, rx: 17.30, Iy: 14900, Sy: 747, ry: 9.77, J: 94.60, Cw: 5562517, Zx: 2576.75, Zy: 1600.00, rts: 11.09, h0: 38.6 },
+        { name: "HN 35x232", A: 295.0, d: 35.0, tw: 1.8, bf: 35.0, tf: 3.5, Ix: 64300, Sx: 3680, rx: 14.80, Iy: 25000, Sy: 1430, ry: 9.20, J: 1054.85, Cw: 6204146, Zx: 4211.55, Zy: 2695.00, rts: 10.35, h0: 31.5 },
+        { name: "HN 35x212", A: 270.0, d: 35.0, tw: 1.6, bf: 35.0, tf: 3.2, Ix: 59900, Sx: 3430, rx: 14.90, Iy: 22900, Sy: 1310, ry: 9.21, J: 803.64, Cw: 5780922, Zx: 3888.78, Zy: 2450.00, rts: 10.30, h0: 31.8 },
+        { name: "HN 35x186", A: 237.0, d: 35.0, tw: 1.4, bf: 35.0, tf: 2.8, Ix: 53900, Sx: 3080, rx: 15.10, Iy: 20000, Sy: 1140, ry: 9.19, J: 539.10, Cw: 5186360, Zx: 3458.13, Zy: 2143.75, rts: 10.23, h0: 32.2 },
+        { name: "HN 35x166", A: 211.0, d: 35.0, tw: 1.2, bf: 35.0, tf: 2.5, Ix: 49000, Sx: 2800, rx: 15.20, Iy: 17900, Sy: 1020, ry: 9.20, J: 381.86, Cw: 4717367, Zx: 3113.75, Zy: 1898.75, rts: 10.19, h0: 32.5 },
+        { name: "HN 35x150", A: 191.0, d: 35.0, tw: 1.2, bf: 35.0, tf: 2.2, Ix: 44300, Sx: 2530, rx: 15.20, Iy: 15700, Sy: 899, ry: 9.08, J: 266.08, Cw: 4228275, Zx: 2806.51, Zy: 1715.00, rts: 10.09, h0: 32.8 },
+        { name: "HN 35x134", A: 171.0, d: 35.0, tw: 1.0, bf: 35.0, tf: 2.0, Ix: 40600, Sx: 2320, rx: 15.40, Iy: 14300, Sy: 817, ry: 9.14, J: 197.00, Cw: 3890906, Zx: 2550.25, Zy: 1531.25, rts: 10.08, h0: 33.0 },
+        { name: "HN 35x124", A: 157.0, d: 35.0, tw: 1.0, bf: 35.0, tf: 1.8, Ix: 37300, Sx: 2130, rx: 15.40, Iy: 12900, Sy: 735, ry: 9.04, J: 146.55, Cw: 3544391, Zx: 2338.09, Zy: 1408.75, rts: 10.02, h0: 33.2 },
+        { name: "HN 35x113", A: 144.0, d: 35.0, tw: 1.0, bf: 35.0, tf: 1.6, Ix: 33900, Sx: 1940, rx: 15.40, Iy: 11400, Sy: 653, ry: 8.92, J: 106.17, Cw: 3188642, Zx: 2123.21, Zy: 1286.25, rts: 9.91, h0: 33.4 },
+        { name: "HN 35x102", A: 130.0, d: 35.0, tw: 1.0, bf: 35.0, tf: 1.4, Ix: 30500, Sx: 1740, rx: 15.30, Iy: 10000, Sy: 572, ry: 8.77, J: 74.76, Cw: 2823576, Zx: 1905.61, Zy: 1163.75, rts: 9.83, h0: 33.6 },
+        { name: "HN 35x91.5", A: 117.0, d: 35.0, tw: 1.0, bf: 35.0, tf: 1.2, Ix: 26900, Sx: 1540, rx: 15.20, Iy: 8580, Sy: 490, ry: 8.58, J: 51.19, Cw: 2449106, Zx: 1685.29, Zy: 1041.25, rts: 9.70, h0: 33.8 },
+        { name: "HN 30x180", A: 230.0, d: 30.0, tw: 1.6, bf: 30.0, tf: 3.2, Ix: 36400, Sx: 2430, rx: 12.60, Iy: 14400, Sy: 961, ry: 7.92, J: 687.58, Cw: 2585664, Zx: 2795.58, Zy: 1800.00, rts: 8.91, h0: 26.8 },
+        { name: "HN 30x159", A: 202.0, d: 30.0, tw: 1.4, bf: 30.0, tf: 2.8, Ix: 32900, Sx: 2190, rx: 12.80, Iy: 12600, Sy: 840, ry: 7.90, J: 461.36, Cw: 2330496, Zx: 2493.18, Zy: 1575.00, rts: 8.85, h0: 27.2 },
+        { name: "HN 30x141", A: 180.0, d: 30.0, tw: 1.2, bf: 30.0, tf: 2.5, Ix: 30000, Sx: 2000, rx: 12.90, Iy: 11300, Sy: 750, ry: 7.91, J: 326.90, Cw: 2126953, Zx: 2250.00, Zy: 1395.00, rts: 8.80, h0: 27.5 },
+        { name: "HN 30x128", A: 163.0, d: 30.0, tw: 1.2, bf: 30.0, tf: 2.2, Ix: 27200, Sx: 1820, rx: 12.90, Iy: 9900, Sy: 660, ry: 7.80, J: 227.71, Cw: 1912779, Zx: 2031.41, Zy: 1260.00, rts: 8.70, h0: 27.8 },
+        { name: "HN 30x115", A: 146.0, d: 30.0, tw: 1.0, bf: 30.0, tf: 2.0, Ix: 25000, Sx: 1670, rx: 13.10, Iy: 9000, Sy: 600, ry: 7.85, J: 168.67, Cw: 1764000, Zx: 1849.00, Zy: 1125.00, rts: 8.69, h0: 28.0 },
+        { name: "HN 30x106", A: 134.0, d: 30.0, tw: 1.0, bf: 30.0, tf: 1.8, Ix: 23000, Sx: 1540, rx: 13.10, Iy: 8100, Sy: 540, ry: 7.76, J: 125.44, Cw: 1610361, Zx: 1697.04, Zy: 1035.00, rts: 8.61, h0: 28.2 },
+        { name: "HN 30x92.2", A: 117.0, d: 30.0, tw: 0.8, bf: 30.0, tf: 1.6, Ix: 20700, Sx: 1380, rx: 13.30, Iy: 7200, Sy: 480, ry: 7.83, J: 86.49, Cw: 1451808, Zx: 1506.85, Zy: 900.00, rts: 8.61, h0: 28.4 },
+        { name: "HN 30x83", A: 106.0, d: 30.0, tw: 0.8, bf: 30.0, tf: 1.4, Ix: 18500, Sx: 1240, rx: 13.20, Iy: 6300, Sy: 420, ry: 7.72, J: 59.52, Cw: 1288287, Zx: 1349.17, Zy: 810.00, rts: 8.52, h0: 28.6 },
+        { name: "HN 30x73.9", A: 94.1, d: 30.0, tw: 0.8, bf: 30.0, tf: 1.2, Ix: 16300, Sx: 1090, rx: 13.20, Iy: 5400, Sy: 360, ry: 7.58, J: 39.27, Cw: 1119744, Zx: 1189.15, Zy: 720.00, rts: 8.45, h0: 28.8 },
+        { name: "HN 30x64.7", A: 82.4, d: 30.0, tw: 0.8, bf: 30.0, tf: 1.0, Ix: 14100, Sx: 939, rx: 13.10, Iy: 4500, Sy: 300, ry: 7.39, J: 24.78, Cw: 946125, Zx: 1026.80, Zy: 630.00, rts: 8.34, h0: 29.0 }
+    ];
+
+    let state = { p: null, mat: null, loads: {}, geo: {}, res: {} };
+
+    // --- 2. LOGIC ---
+    function filterAndCalc() {
+        const type = document.querySelector('input[name="typeProfile"]:checked').value;
+        const select = document.getElementById("selProfile");
+        select.innerHTML = "";
+        
+        // Filter and sort
+        const list = PROFILES.filter(p => p.name.startsWith(type)).sort((a, b) => b.d - a.d || b.A - a.A);
+        
+        list.forEach(p => {
+            let opt = document.createElement("option");
+            opt.value = p.name;
+            opt.text = p.name;
+            select.add(opt);
+        });
+        
+        if(list.length > 0) select.selectedIndex = 0;
+        calc();
+    }
+
+    function calc() {
+        // 1. Inputs
+        const pName = document.getElementById("selProfile").value;
+        if(!pName) return;
+        const p = PROFILES.find(x => x.name === pName);
+        
+        const matKey = document.getElementById("selSteel").value;
+        const mat = MATERIALS[matKey];
+        
+        const loads = {
+            P: parseFloat(document.getElementById("inP").value) * 1000,
+            Mx: parseFloat(document.getElementById("inMx").value) * 100000,
+            My: parseFloat(document.getElementById("inMy").value) * 100000
+        };
+        
+        const geo = {
+            Lx: parseFloat(document.getElementById("inLx").value),
+            Kx: parseFloat(document.getElementById("inKx").value),
+            Ly: parseFloat(document.getElementById("inLy").value),
+            Ky: parseFloat(document.getElementById("inKy").value),
+            Lb: parseFloat(document.getElementById("inLb").value),
+            Cb: parseFloat(document.getElementById("inCb").value)
+        };
+
+        // 2. Solve
+        const res = solveProfile(p, mat, loads, geo);
+        state = { p, mat, loads, geo, res };
+
+        // 3. Render
+        renderUI();
+        runOptimization(p.name.split(' ')[0], mat, loads, geo);
+    }
+
+    function solveProfile(p, mat, loads, geo) {
+        const Omega = 1.67; // ASD
+
+        // A. COMPRESION
+        const KLrx = (geo.Kx * geo.Lx) / p.rx;
+        const KLry = (geo.Ky * geo.Ly) / p.ry;
+        const KLr = Math.max(KLrx, KLry);
+        const Fe = (Math.PI**2 * mat.E) / (KLr**2);
+
+        // Clasif. Local (Alas/Alma)
+        const h = p.d - 2*p.tf;
+        const lambda_f = (p.bf/2)/p.tf;
+        const lambda_r_f_comp = 0.56 * Math.sqrt(mat.E/mat.Fy);
+        const Qs = (lambda_f > lambda_r_f_comp) ? 0.9 : 1.0; // Simplificado
+
+        const lambda_w = h/p.tw;
+        const lambda_r_w_comp = 1.49 * Math.sqrt(mat.E/mat.Fy);
+        const Qa = (lambda_w > lambda_r_w_comp) ? 0.9 : 1.0; // Simplificado
+        
+        const Q = Qs * Qa;
+
+        const lim471 = 4.71 * Math.sqrt(mat.E / (Q*mat.Fy));
+        let Fcr = 0;
+        if(KLr <= lim471) {
+            Fcr = Q * (0.658 ** ((Q*mat.Fy)/Fe)) * mat.Fy;
+        } else {
+            Fcr = 0.877 * Fe;
+        }
+        const Pn = Fcr * p.A;
+        const Pa = Pn / Omega;
+        const ratio_c = loads.P / Pa;
+
+        // B. FLEXION X
+        const Lp = 1.76 * p.ry * Math.sqrt(mat.E/mat.Fy);
+        const rts = Math.sqrt(Math.sqrt(p.Iy*p.Cw)/p.Sx);
+        const term1 = p.J / (p.Sx * h);
+        const term2 = 6.76 * ((0.7*mat.Fy)/mat.E)**2;
+        const Lr = 1.95 * rts * (mat.E/(0.7*mat.Fy)) * Math.sqrt(term1 + Math.sqrt(term1**2 + term2));
+
+        let Mnx = 0;
+        const Mp = mat.Fy * p.Zx;
+        let flexZone = "";
+
+        if(geo.Lb <= Lp) {
+            Mnx = Mp;
+            flexZone = "Zona 1 (Plástica)";
+        } else if(geo.Lb <= Lr) {
+            const Mr = 0.7 * mat.Fy * p.Sx;
+            Mnx = geo.Cb * (Mp - (Mp - Mr)*((geo.Lb - Lp)/(Lr - Lp)));
+            Mnx = Math.min(Mnx, Mp);
+            flexZone = "Zona 2 (Inelástica)";
+        } else {
+            const Fcr_ltb = (geo.Cb * Math.PI**2 * mat.E) / ((geo.Lb/rts)**2); 
+            Mnx = Math.min(Fcr_ltb * p.Sx, Mp);
+            flexZone = "Zona 3 (Elástica)";
+        }
+        const Max = Mnx / Omega;
+        const ratio_mx = loads.Mx / Max;
+
+        // C. FLEXION Y
+        const Mny = Math.min(mat.Fy * p.Zy, 1.6*mat.Fy*p.Sy);
+        const May = Mny / Omega;
+        const ratio_my = loads.My / May;
+
+        // D. INTERACCION
+        let ratio_int = 0;
+        let formula = "";
+        if(ratio_c >= 0.2) {
+            ratio_int = ratio_c + (8/9)*(ratio_mx + ratio_my);
+            formula = "H1-1a";
+        } else {
+            ratio_int = (ratio_c/2) + (ratio_mx + ratio_my);
+            formula = "H1-1b";
+        }
+
+        return { 
+            KLr, Q, Fe, Fcr, Pn, Pa, ratio_c,
+            Lp, Lr, Mnx, Max, ratio_mx, flexZone,
+            Mny, May, ratio_my,
+            ratio_int, formula,
+            lambda_f, lambda_w, lambda_r_f_comp, lambda_r_w_comp
+        };
+    }
+
+    // --- 3. UI RENDER ---
+    function renderUI() {
+        const { p, res, loads } = state;
+        const k = n => n.toLocaleString("es-CL", {maximumFractionDigits: 2});
+
+        // SVG Text
+        document.getElementById('svg_d').textContent = p.d.toFixed(1);
+        document.getElementById('svg_bf').textContent = p.bf.toFixed(1);
+        document.getElementById('svg_tf').textContent = p.tf.toFixed(2);
+        document.getElementById('svg_tw').textContent = p.tw.toFixed(2);
+
+        // Text Data
+        document.getElementById('txt_name').textContent = p.name;
+        document.getElementById('txt_d').textContent = p.d.toFixed(1);
+        document.getElementById('txt_bf').textContent = p.bf.toFixed(1);
+        document.getElementById('txt_tw').textContent = p.tw.toFixed(2);
+        document.getElementById('txt_tf').textContent = p.tf.toFixed(2);
+        document.getElementById('txt_A').textContent = p.A.toFixed(1);
+        document.getElementById('txt_W').textContent = (p.A*0.785).toFixed(1);
+        document.getElementById('txt_Ix').textContent = p.Ix.toLocaleString("es-CL");
+        document.getElementById('txt_Zx').textContent = p.Zx.toFixed(1);
+        document.getElementById('txt_Iy').textContent = p.Iy.toLocaleString("es-CL");
+        document.getElementById('txt_ry').textContent = p.ry.toFixed(2);
+
+        // Cards
+        updateCard('card_c', 'val_c', 'tag_c', res.ratio_c);
+        updateCard('card_mx', 'val_mx', 'tag_mx', res.ratio_mx);
+        updateCard('card_my', 'val_my', 'tag_my', res.ratio_my);
+        
+        // Int Card
+        const elVal = document.getElementById('val_int');
+        const elTag = document.getElementById('tag_int');
+        const elCard = document.getElementById('card_int');
+        elVal.textContent = res.ratio_int.toFixed(3);
+        
+        if(res.ratio_int > 1.0) {
+            elCard.className = "bg-slate-800 p-4 rounded-xl border-l-4 border-l-rose-500 shadow-lg flex flex-col justify-between relative overflow-hidden";
+            elVal.classList.remove('text-emerald-400'); elVal.classList.add('text-rose-400');
+            elTag.textContent = "FALLA";
+            elTag.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-rose-600 text-white";
+        } else {
+            elCard.className = "bg-slate-800 p-4 rounded-xl border-l-4 border-l-emerald-500 shadow-lg flex flex-col justify-between relative overflow-hidden";
+            elVal.classList.remove('text-rose-400'); elVal.classList.add('text-emerald-400');
+            elTag.textContent = "CUMPLE";
+            elTag.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white";
+        }
+
+        renderMemoryHTML();
+    }
+
+    function updateCard(cid, vid, tid, val) {
+        const card = document.getElementById(cid);
+        const v = document.getElementById(vid);
+        const t = document.getElementById(tid);
+        v.textContent = val.toFixed(3);
+        
+        card.className = "bg-white p-4 rounded-xl border-l-4 shadow-soft flex flex-col justify-between " + 
+            (val > 1.0 ? "border-l-rose-500" : "border-l-slate-300");
+        
+        v.className = "text-2xl font-bold " + (val > 1.0 ? "text-rose-600" : "text-slate-700");
+        
+        t.textContent = val > 1.0 ? "FALLA" : (val > 0.01 ? "OK" : "-");
+        t.className = "text-[10px] font-bold px-2 py-0.5 rounded " + 
+            (val > 1.0 ? "bg-rose-100 text-rose-600" : "bg-slate-100 text-slate-500");
+    }
+
+    // --- 4. OPTIMIZATION LOOP ---
+    function runOptimization(type, mat, loads, geo) {
+        const tbody = document.getElementById('optBody');
+        tbody.innerHTML = "";
+        
+        // Filter same type
+        const candidates = PROFILES.filter(p => p.name.startsWith(type));
+        const valid = [];
+
+        candidates.forEach(cand => {
+            const r = solveProfile(cand, mat, loads, geo);
+            // Check validity (Ratio <= 1.0)
+            if(r.ratio_int <= 1.0 && r.ratio_int > 0.01) {
+                valid.push({ p: cand, r: r.ratio_int, w: cand.A * 0.785 });
+            }
+        });
+
+        // Sort by weight asc
+        valid.sort((a, b) => a.w - b.w);
+
+        // Render top 15
+        if(valid.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Ningún perfil cumple.</td></tr>`;
+        } else {
+            valid.slice(0, 15).forEach(item => {
+                const tr = document.createElement('tr');
+                const isSelected = item.p.name === state.p.name;
+                tr.className = `opt-row ${isSelected ? 'active' : ''}`;
+                tr.innerHTML = `
+                    <td class="px-3 py-2 font-mono text-slate-700 ${isSelected ? 'font-bold' : ''}">${item.p.name}</td>
+                    <td class="px-2 py-2 text-right text-slate-500">${item.w.toFixed(1)}</td>
+                    <td class="px-3 py-2 text-right font-bold ${item.r > 0.95 ? 'text-amber-500' : 'text-emerald-600'}">${item.r.toFixed(2)}</td>
+                `;
+                tr.onclick = () => {
+                    document.getElementById('selProfile').value = item.p.name;
+                    calc();
+                };
+                tbody.appendChild(tr);
+            });
+        }
+    }
+
+    // --- 5. MEMORY HTML ---
+    function renderMemoryHTML() {
+        const div = document.getElementById('memContent');
+        const {p, mat, geo, loads, res} = state;
+        const k = n => n.toLocaleString("es-CL", {maximumFractionDigits:2});
+        const k3 = n => n.toFixed(3);
+
+        let html = `
+            <div class="mem-h">1. Parámetros de Diseño</div>
+            <div class="grid grid-cols-2 gap-6 mb-4">
+                <div>
+                    <p class="mem-p"><strong>Perfil:</strong> ${p.name}</p>
+                    <p class="mem-p"><strong>Material:</strong> Fy=${mat.Fy}, E=${k(mat.E)}</p>
+                    <p class="mem-p"><strong>Factor Q:</strong> ${res.Q.toFixed(3)}</p>
+                </div>
+                <div>
+                    <p class="mem-p"><strong>Cargas:</strong> Pr=${k(loads.P/1000)} t, Mrx=${k(loads.Mx/100000)} t-m, Mry=${k(loads.My/100000)} t-m</p>
+                    <p class="mem-p"><strong>Geom:</strong> Lx=${geo.Lx}, Ly=${geo.Ly}, Lb=${geo.Lb}</p>
+                </div>
+            </div>
+
+            <div class="mem-h">2. Verificación de Esbeltez Global</div>
+            <p class="mem-p">Longitudes Efectivas: $K_x L_x = ${geo.Kx*geo.Lx}$ cm, $K_y L_y = ${geo.Ky*geo.Ly}$ cm.</p>
+            <div class="mem-block text-center">
+                $$ \\frac{KL}{r} = \\max\\left(\\frac{${geo.Kx*geo.Lx}}{${p.rx}}, \\frac{${geo.Ky*geo.Ly}}{${p.ry}}\\right) = ${k(res.KLr)} $$
+            </div>
+            <p class="mem-p">Estado: ${res.KLr<=200 ? '<span class="text-emerald-600 font-bold">CUMPLE (<=200)</span>' : '<span class="text-rose-600 font-bold">EXCEDE (>200)</span>'}</p>
+
+            <div class="mem-h">3. Compresión Axial (NCh427 E)</div>
+            <p class="mem-p">Tensión Elástica Euler: $F_e = ${k(res.Fe)}$ kgf/cm².</p>
+            <p class="mem-p">Tensión Crítica ($F_{cr}$):</p>
+            <div class="mem-block text-center">
+                $$ F_{cr} = ${k(res.Fcr)} \\text{ kgf/cm}^2 $$
+            </div>
+            <p class="mem-p">Resistencia Admisible: $\\mathbf{P_c = P_n / 1.67 = ${k(res.Pa/1000)} \\text{ tonf}}$</p>
+
+            <div class="mem-h">4. Flexión Eje Fuerte X-X (NCh427 F)</div>
+            <p class="mem-p">Longitud no arriostrada $L_b = ${geo.Lb}$ cm.</p>
+            <p class="mem-p">Límites: $L_p = ${k(res.Lp)}$ cm, $L_r = ${k(res.Lr)}$ cm.</p>
+            <p class="mem-p">Clasificación: <strong>${res.flexZone}</strong></p>
+            <div class="mem-block text-center">
+                $$ M_{nx} = ${k(res.Mnx/100000)} \\text{ tonf-m} $$
+            </div>
+            <p class="mem-p">Resistencia Admisible: $\\mathbf{M_{cx} = M_{nx} / 1.67 = ${k(res.Max/100000)} \\text{ tonf-m}}$</p>
+
+            <div class="mem-h">5. Interacción (NCh427 H1-1)</div>
+            <p class="mem-p">Relación Axial $P_r/P_c = ${k3(res.ratio_c)}$. Se aplica Ec. <strong>${res.formula}</strong>.</p>
+            <div class="mem-block text-center font-bold text-lg text-slate-800">
+                $$ \\text{Ratio} = ${k3(res.ratio_int)} $$
+            </div>
+        `;
+        div.innerHTML = html;
+        renderMathInElement(div, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
+    }
+
+    function toggleMem() {
+        const el = document.getElementById('memContent');
+        const icon = document.getElementById('chevron');
+        el.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+
+    function exportMemory() {
+        if(!state.p) return;
+        const {p, res, loads} = state;
+        let txt = `MEMORIA DE CÁLCULO - CALCACERO\n`;
+        txt += `==============================\n`;
+        txt += `PERFIL: ${p.name}\n`;
+        txt += `ESTADO: ${res.ratio_int > 1 ? 'FALLA' : 'CUMPLE'} (${res.ratio_int.toFixed(3)})\n\n`;
+        txt += `1. SOLICITACIONES\n   Pr=${(loads.P/1000).toFixed(2)} t, Mrx=${(loads.Mx/100000).toFixed(2)} tm, Mry=${(loads.My/100000).toFixed(2)} tm\n\n`;
+        txt += `2. COMPRESION\n   KL/r=${res.KLr.toFixed(2)}, Q=${res.Q.toFixed(3)}\n   Fcr=${res.Fcr.toFixed(1)} kg/cm2\n   Pc=${(res.Pa/1000).toFixed(2)} t\n\n`;
+        txt += `3. FLEXION X\n   Zona: ${res.flexZone}\n   Mnx=${(res.Mnx/100000).toFixed(2)} tm\n   Mcx=${(res.Max/100000).toFixed(2)} tm\n\n`;
+        txt += `4. INTERACCION\n   Ratio Axial: ${res.ratio_c.toFixed(3)}\n   Ratio Flex: ${(res.ratio_mx+res.ratio_my).toFixed(3)}\n   TOTAL: ${res.ratio_int.toFixed(3)}`;
+        
+        const blob = new Blob([txt], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Memoria_${p.name.replace(/\s/g,'')}.txt`;
+        a.click();
+    }
+
+    // Init
+    document.addEventListener("DOMContentLoaded", () => {
+        renderMathInElement(document.body, { delimiters: [{left: "$", right: "$", display: false}] });
+        filterAndCalc();
+    });
+
+</script>
+</body>
+</html>
