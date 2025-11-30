@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadoras de Ingeniería</title>
+    <style>
+        /* --- SISTEMA DE DISEÑO (iOS/Clean Style) --- */
+        :root {
+            --bg: #F2F2F7;
+            --card: #FFFFFF;
+            --text: #1D1D1F;
+            --subtext: #86868b;
+            --accent: #0071e3;
+            --border: #D1D1D6;
+            --shadow: 0 4px 12px rgba(0,0,0,0.03);
+            --hover-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px 24px;
+            line-height: 1.5;
+        }
+
+        /* --- LAYOUT DEL DASHBOARD --- */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 17px;
+            color: var(--subtext);
+            font-weight: 400;
+        }
+
+        /* --- REJILLA DE TARJETAS --- */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        /* --- ESTILO DE LA TARJETA (ENLACE) --- */
+        .tool-card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 32px;
+            text-decoration: none;
+            color: var(--text);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 140px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Efecto Hover */
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--hover-shadow);
+            border-color: rgba(0, 113, 227, 0.1);
+        }
+
+        /* Decoración sutil al hover (barra lateral azul) */
+        .tool-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tool-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Contenido de la tarjeta */
+        .card-category {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--subtext);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--text);
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--subtext);
+            margin: 0;
+        }
+
+        .arrow-icon {
+            align-self: flex-end;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 16px;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover .arrow-icon {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 600px) {
+            body { padding: 24px 20px; }
+            h1 { font-size: 26px; }
+            .tools-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <header>
+            <h1>Calculadoras de Ingeniería</h1>
+            <div class="subtitle">Selecciona una herramienta para comenzar:</div>
+        </header>
+
+        <div class="tools-grid">
+            
+            <!-- TARJETA 1: Acero -->
+            <a href="./acero/index.html" class="tool-card">
+                <div>
+                    <div class="card-category">Acero Estructural</div>
+                    <h2 class="card-title">Verificación de Perfiles (NCh427)</h2>
+                    <p class="card-desc">Cálculo de resistencia y verificación de perfiles de acero según normativa.</p>
+                </div>
+                <div class="arrow-icon">&rarr;</div>
+            </a>
+
+            <!-- TARJETA 2: Combinaciones -->
+            <a href="./combinaciones/index.html" class="tool-card">
+                <div>
+                    <div class="card-category">Análisis de Cargas</div>
+                    <h2 class="card-title">Combinaciones de Carga</h2>
+                    <p class="card-desc">Generación de combinaciones y estados de carga para diseño.</p>
+                </div>
+                <div class="arrow-icon">&rarr;</div>
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
