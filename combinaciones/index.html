@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora CTE DB-SE</title>
+    <style>
+        :root {
+            --bg: #F2F2F7;
+            --card: #FFFFFF;
+            --text: #1D1D1F;
+            --subtext: #6E6E73;
+            --accent: #0071e3;
+            --border: #D1D1D6;
+            --shadow: 0 4px 12px rgba(0,0,0,0.04);
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font); background: var(--bg); color: var(--text);
+            margin: 0; padding: 24px; line-height: 1.5; font-size: 14px; /* Letra más grande */
+        }
+
+        .container {
+            max-width: 1400px; margin: 0 auto; display: grid;
+            grid-template-columns: 340px 1fr; gap: 24px; align-items: start;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+        .card { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.02); }
+        
+        h1 { font-size: 20px; margin: 0 0 4px 0; font-weight: 700; color: #000; }
+        .subtitle { font-size: 13px; color: var(--subtext); margin-bottom: 20px; display: block; }
+        
+        h2 { font-size: 12px; font-weight: 700; margin: 24px 0 12px 0; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .input-group { margin-bottom: 14px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 12px; }
+        
+        select, input[type="text"] {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; background: #FFF; box-sizing: border-box; color: #333;
+        }
+        select:focus, input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; font-weight: 500; }
+        .switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #E5E5EA; transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 2px; bottom: 2px; background: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input:checked + .slider { background: var(--accent); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        .var-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .sub-config { background: #F2F2F7; padding: 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); margin: 10px 0; display: none; }
+        .sub-config.active { display: block; }
+
+        .info-mini { font-size: 12px; color: var(--subtext); margin-top: 16px; background: #F2F2F7; padding: 12px; border-radius: 8px; }
+
+        /* --- RESULTADOS --- */
+        .results-area { display: flex; flex-direction: column; gap: 24px; }
+        
+        .result-group { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #F2F2F7; padding-bottom: 12px; }
+        .group-title { font-size: 18px; font-weight: 700; color: var(--text); }
+        .group-desc { font-size: 13px; color: var(--subtext); margin-left: 10px; font-weight: 400; }
+
+        .combo-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .combo-table th { text-align: left; color: var(--subtext); font-weight: 600; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; }
+        .combo-table td { padding: 12px; border-bottom: 1px solid #F2F2F7; vertical-align: top; }
+        .combo-table tr:hover { background: #FAFAFA; }
+
+        .f-code { 
+            font-family: "SF Mono", "Menlo", monospace; 
+            color: var(--accent); 
+            font-size: 13px; /* Aumentado */
+            letter-spacing: -0.2px; 
+            display: block; margin-top: 2px;
+            font-weight: 500;
+        }
+        .col-name { width: 30%; font-weight: 600; color: #333; }
+        .col-formula { width: 50%; }
+        .col-check { width: 20%; text-align: right; }
+
+        .tag { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 4px; margin-bottom: 2px; }
+        .tag-blue { background: #E8F2FF; color: #0071e3; }
+        .tag-purp { background: #F3E8FF; color: #8944AB; }
+        .tag-orange { background: #FFF4E5; color: #FF9500; }
+        .tag-red { background: #FFE5E5; color: #FF3B30; }
+        .tag-gray { background: #F2F2F7; color: #666; }
+
+        .btn-copy { background: white; border: 1px solid #D1D1D6; color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+
+        .notes-container { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .note-item { background: #FAFAFA; border-left: 4px solid #D1D1D6; padding: 12px 16px; border-radius: 6px; font-size: 13px; color: #444; }
+        .note-item strong { display: block; color: #000; margin-bottom: 4px; font-size: 14px; }
+        .note-item.imp { background: #FFF9E6; border-color: #FFD60A; color: #664d03; }
+
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- PANEL CONFIGURACIÓN -->
+    <div class="sidebar">
+        <div class="card">
+            <h1>CTE DB-SE</h1>
+            <span class="subtitle">Generador de Combinaciones</span>
+            
+            <div class="input-group">
+                <label>Uso Principal (Q_u)</label>
+                <select id="catMain" onchange="calc()">
+                    <option value="A">A - Residencial (ψ₀=0.7)</option>
+                    <option value="B" selected>B - Oficinas (ψ₀=0.7)</option>
+                    <option value="C">C - Pública (ψ₀=0.7)</option>
+                    <option value="D">D - Comercial (ψ₀=0.7)</option>
+                    <option value="E">E - Tráfico (ψ₀=0.7)</option>
+                </select>
+            </div>
+
+            <div class="toggle-row">
+                <label>Cubierta (Q_c)</label>
+                <label class="switch"><input type="checkbox" id="hasQc" onchange="toggleRoof(); calc()"><span class="slider"></span></label>
+            </div>
+            <div id="roofConfig" class="sub-config">
+                <label>Tipo de Cubierta</label>
+                <select id="catRoof" onchange="calc()" style="margin-bottom:10px">
+                    <option value="G" selected>G - Mantenimiento (ψ₀=0)</option>
+                    <option value="F">F - Transitable (ψ₀=0.7)</option>
+                    <option value="H">H - Inaccesible (ψ₀=0)</option>
+                </select>
+                <label>Variable SAP2000</label>
+                <input type="text" id="varQc" value="Q_c" oninput="calc()">
+            </div>
+
+            <label>Altitud (Nieve)</label>
+            <select id="altitude" onchange="calc()" style="margin-bottom:16px">
+                <option value="low">≤ 1000 m (ψ₂=0)</option>
+                <option value="high">> 1000 m (ψ₂=0.2)</option>
+            </select>
+
+            <h2>Cargas Activas</h2>
+            <div class="toggle-row"><span>Viento (W)</span><label class="switch"><input type="checkbox" id="hasW" checked onchange="calc()"><span class="slider"></span></label></div>
+            <div class="toggle-row"><span>Nieve (N)</span><label class="switch"><input type="checkbox" id="hasN" onchange="calc()"><span class="slider"></span></label></div>
+            <div class="toggle-row"><span>Sismo (E)</span><label class="switch"><input type="checkbox" id="hasE" onchange="calc()"><span class="slider"></span></label></div>
+            <div class="toggle-row"><span>Pretensado (P)</span><label class="switch"><input type="checkbox" id="hasP" onchange="calc()"><span class="slider"></span></label></div>
+            <div class="toggle-row"><span>Accidental (A)</span><label class="switch"><input type="checkbox" id="hasA" onchange="calc()"><span class="slider"></span></label></div>
+
+            <h2>Opciones</h2>
+            <div class="toggle-row" title="Genera ELU con 0.8G">
+                <span>Grav. Favorable (0.8G)</span>
+                <label class="switch"><input type="checkbox" id="hasFav" onchange="calc()"><span class="slider"></span></label>
+            </div>
+
+            <h2>Variables (SAP2000)</h2>
+            <div class="var-grid">
+                <div><label>P. Propio</label><input type="text" id="varG" value="G" oninput="calc()"></div>
+                <div><label>Uso Princ.</label><input type="text" id="varQu" value="Q_u" oninput="calc()"></div>
+                <div><label>Viento</label><input type="text" id="varW" value="W" oninput="calc()"></div>
+                <div><label>Nieve</label><input type="text" id="varN" value="N" oninput="calc()"></div>
+                <div><label>Sismo</label><input type="text" id="varE" value="E" oninput="calc()"></div>
+                <div><label>Accid.</label><input type="text" id="varA" value="A" oninput="calc()"></div>
+                <div><label>Pretens.</label><input type="text" id="varP" value="P" oninput="calc()"></div>
+            </div>
+
+            <div class="info-mini" id="psiInfo"></div>
+        </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="results-area">
+        
+        <!-- ELU -->
+        <div class="result-group">
+            <div class="group-header">
+                <div><span class="group-title">ELU - Resistencia</span><span class="group-desc">Ec. 4.3 (STR/GEO)</span></div>
+                <button class="btn-copy" onclick="copyBlock('tblELU')">Copiar ELU</button>
+            </div>
+            <table class="combo-table"><tbody id="tblELU"></tbody></table>
+        </div>
+
+        <!-- ELS -->
+        <div class="result-group">
+            <div class="group-header">
+                <div><span class="group-title">ELS - Deformaciones</span><span class="group-desc">DB-SE 4.3.3</span></div>
+                <button class="btn-copy" onclick="copyBlock('tblELS')">Copiar ELS</button>
+            </div>
+            <table class="combo-table"><tbody id="tblELS"></tbody></table>
+        </div>
+
+        <!-- ACCIDENTAL -->
+        <div class="result-group" id="grpACC" style="display:none">
+            <div class="group-header">
+                <div><span class="group-title">Sismo / Accidental</span><span class="group-desc">Ec. 4.4 y 4.5</span></div>
+                <button class="btn-copy" onclick="copyBlock('tblACC')">Copiar ACC</button>
+            </div>
+            <table class="combo-table"><tbody id="tblACC"></tbody></table>
+        </div>
+
+        <!-- NOTAS -->
+        <div class="result-group">
+            <div class="group-header">
+                <span class="group-title">Notas Técnicas</span>
+                <button class="btn-copy" onclick="copyNotes()">Copiar Informe</button>
+            </div>
+            <div id="notesContainer" class="notes-container"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // --- DATABASE ---
+    const PSIS = {
+        'A': { p0: 0.7, p1: 0.5, p2: 0.3, label: 'Residencial' },
+        'B': { p0: 0.7, p1: 0.5, p2: 0.3, label: 'Oficinas' },
+        'C': { p0: 0.7, p1: 0.7, p2: 0.6, label: 'Pública' },
+        'D': { p0: 0.7, p1: 0.7, p2: 0.6, label: 'Comercial' },
+        'E': { p0: 0.7, p1: 0.7, p2: 0.6, label: 'Tráfico' },
+        'F': { p0: 0.7, p1: 0.7, p2: 0.6, label: 'Cub. Transit' },
+        'G': { p0: 0,   p1: 0,   p2: 0,   label: 'Cub. Mant.' },
+        'H': { p0: 0,   p1: 0,   p2: 0,   label: 'Cub. Inacc.' }
+    };
+
+    function toggleRoof() {
+        const show = document.getElementById('hasQc').checked;
+        const conf = document.getElementById('roofConfig');
+        if(show) { conf.classList.add('active'); conf.style.display = 'block'; }
+        else { conf.classList.remove('active'); conf.style.display = 'none'; }
+    }
+
+    function getVal(id) { const e = document.getElementById(id); return e ? e.value : ''; }
+    function getChk(id) { const e = document.getElementById(id); return e ? e.checked : false; }
+    function round(n) { return Math.round((n + Number.EPSILON) * 100) / 100; }
+
+    // --- CALCULATION ---
+    function calc() {
+        const cfg = {
+            catU: getVal('catMain'), catC: getVal('catRoof'), alt: getVal('altitude'),
+            hasQc: getChk('hasQc'), hasW: getChk('hasW'), hasN: getChk('hasN'),
+            hasE: getChk('hasE'), hasP: getChk('hasP'), hasA: getChk('hasA'), hasFav: getChk('hasFav'),
+            G: getVal('varG'), Qu: getVal('varQu'), Qc: getVal('varQc'),
+            W: getVal('varW'), N: getVal('varN'), E: getVal('varE'), P: getVal('varP'), A: getVal('varA')
+        };
+
+        // --- DEFINICIÓN DE CARGAS ---
+        // Corrección Clave: Usar spread operator AL PRINCIPIO para que 'name' sea el del input
+        let loads = []; 
+        
+        // Uso Principal
+        // IMPORTANTE: Primero copiamos las propiedades de PSIS y LUEGO sobrescribimos el nombre con la variable
+        loads.push({ ...PSIS[cfg.catU], id:'Qu', type:'Q', name: cfg.Qu }); 
+
+        if(cfg.hasQc) {
+            loads.push({ ...PSIS[cfg.catC], id:'Qc', type:'Q', name: cfg.Qc });
+        }
+
+        const pN = (cfg.alt === 'high') ? {p0:0.7, p1:0.5, p2:0.2} : {p0:0.5, p1:0.2, p2:0};
+        if(cfg.hasN) loads.push({ ...pN, id:'N', type:'env', name: cfg.N });
+
+        const pW = {p0:0.6, p1:0.5, p2:0};
+
+        // Info
+        let info = `Uso: ${PSIS[cfg.catU].p0}/${PSIS[cfg.catU].p1}/${PSIS[cfg.catU].p2}`;
+        if(cfg.hasN) info += ` | Nieve: ${pN.p0}/${pN.p1}/${pN.p2}`;
+        document.getElementById('psiInfo').innerText = info;
+
+        // Arrays
+        let elus = [], elss = [], accs = [];
+
+        // --- ELU (Rotura) ---
+        const gammas = cfg.hasFav ? [1.35, 0.8] : [1.35];
+        gammas.forEach(gG => {
+            const tag = gG===0.8 ? '(Fav)' : '';
+            // Base: gG*G + 1.0*P
+            const baseTerms = [{c:gG, v:cfg.G}];
+            if(cfg.hasP) baseTerms.push({c:1.0, v:cfg.P});
+            const base = buildFormula(baseTerms);
+
+            elus.push({ name:`ELU-Perm ${tag}`, f:base, tags:[{t:'Resistencia',c:'gray'}] });
+
+            // Scalar Dominants
+            loads.forEach(dom => {
+                let terms = [{c:1.5, v:dom.name}];
+                loads.forEach(acc => { if(acc.id!==dom.id) terms.push({c:1.5*acc.p0, v:acc.name}); });
+                if(cfg.hasW) terms.push({c:1.5*pW.p0, v:cfg.W+'X'});
+                elus.push({ name:`ELU-${dom.name} Dom ${tag}`, f: combine(base, terms), tags:[{t:'Resistencia',c:'gray'}] });
+            });
+
+            // Wind Dominants
+            if(cfg.hasW) {
+                [`${cfg.W}X`, `${cfg.W}Y`].forEach(dir => {
+                    [1.5, -1.5].forEach(fact => {
+                        let terms = [{c:fact, v:dir}];
+                        loads.forEach(acc => terms.push({c:1.5*acc.p0, v:acc.name}));
+                        elus.push({ name:`ELU-Viento ${dir} Dom ${tag}`, f: combine(base, terms), tags:[{t:'Estabilidad',c:'gray'}] });
+                    });
+                });
+            }
+        });
+
+        // --- ELS (Deformaciones) ---
+        const baseTermsS = [{c:1.0, v:cfg.G}];
+        if(cfg.hasP) baseTermsS.push({c:1.0, v:cfg.P});
+        const baseS = buildFormula(baseTermsS);
+
+        // 1. CARACTERÍSTICA (Integridad)
+        loads.forEach(dom => {
+            let terms = [{c:1.0, v:dom.name}];
+            loads.forEach(acc => { if(acc.id!==dom.id) terms.push({c:acc.p0, v:acc.name}); });
+            if(cfg.hasW) terms.push({c:0.6, v:cfg.W+'X'});
+            elss.push({ 
+                name:`ELS Caract. - ${dom.name} Dom`, 
+                f: combine(baseS, terms), 
+                tags:[{t:'L/500',c:'blue'}, {t:'L/400',c:'blue'}, {t:'L/300',c:'blue'}] 
+            });
+        });
+
+        if(cfg.hasW) {
+            [`${cfg.W}X`, `${cfg.W}Y`].forEach(dir => {
+                let terms = [{c:1.0, v:dir}];
+                loads.forEach(acc => terms.push({c:acc.p0, v:acc.name}));
+                elss.push({ 
+                    name:`ELS Caract. - Viento ${dir}`, 
+                    f: combine(baseS, terms), 
+                    tags:[{t:'H/500',c:'blue'}, {t:'h/250',c:'blue'}]
+                });
+            });
+        }
+
+        // 2. FRECUENTE (Confort)
+        if(loads.length > 0) {
+            let terms = [];
+            let hasAny = false;
+            loads.forEach(l => {
+                if(l.p1 > 0) { terms.push({c:l.p1, v:l.name}); hasAny=true; }
+            });
+            if(cfg.hasW && pW.p2>0) terms.push({c:pW.p2, v:cfg.W+'X'});
+            
+            if(hasAny) {
+                elss.push({ 
+                    name:`ELS Frecuente (Reversible)`, 
+                    f: combine(baseS, terms), 
+                    tags:[{t:'L/350',c:'purp'}, {t:'Confort',c:'gray'}]
+                });
+            }
+        }
+
+        // 3. CUASI-PERMANENTE (Apariencia)
+        let qpTerms = [];
+        loads.forEach(l => {
+            if(l.p2 > 0) qpTerms.push({c:l.p2, v:l.name});
+        });
+        // Always generate quasi-permanent even if only G
+        elss.push({ 
+            name:`ELS Casi Permanente`, 
+            f: combine(baseS, qpTerms), 
+            tags:[{t:'L/300',c:'orange'}, {t:'H/250',c:'orange'}, {t:'Apariencia',c:'gray'}]
+        });
+
+        // --- ACCIDENTAL ---
+        if(cfg.hasE || cfg.hasA) {
+            let massTerms = [];
+            loads.forEach(l => { if(l.p2 > 0) massTerms.push({c:l.p2, v:l.name}); });
+
+            if(cfg.hasE) {
+                [`${cfg.E}X`, `${cfg.E}Y`].forEach(dir => {
+                    [1.0, -1.0].forEach(s => {
+                        let terms = [{c:s, v:dir}, ...massTerms];
+                        let baseE = buildFormula([{c:1.0, v:cfg.G}, {c:cfg.hasP?1.0:0, v:cfg.P}]);
+                        accs.push({ name:`Sismo ${dir}`, f: combine(baseE, terms), tags:[{t:'Accidental',c:'red'}] });
+                    });
+                });
+            }
+            if(cfg.hasA) {
+                let accTerms = [{c:1.0, v:cfg.A}];
+                if(loads.length>0) {
+                    accTerms.push({c:loads[0].p1, v:loads[0].name}); // Main Q psi1
+                    loads.slice(1).forEach(l => { if(l.p2>0) accTerms.push({c:l.p2, v:l.name}); }); 
+                }
+                let baseA = buildFormula([{c:1.0, v:cfg.G}, {c:cfg.hasP?1.0:0, v:cfg.P}]);
+                accs.push({ name:`Accidental / Incendio`, f: combine(baseA, accTerms), tags:[{t:'Fuego',c:'red'}] });
+            }
+        }
+
+        renderTable('tblELU', elus);
+        renderTable('tblELS', elss);
+        renderTable('tblACC', accs);
+        document.getElementById('grpACC').style.display = accs.length ? 'block' : 'none';
+        
+        generateNotes(cfg, loads, pN);
+    }
+
+    // --- FORMULA BUILDER (STRICT NO ZERO) ---
+    function buildFormula(terms) {
+        const filtered = terms.filter(t => Math.abs(t.c) > 0.001);
+        if(filtered.length === 0) return '';
+        
+        return filtered.map((t, i) => {
+            let s = t.c < 0 ? '- ' : (i===0 ? '' : '+ ');
+            let v = Math.abs(t.c);
+            let vStr = (Math.abs(v - 1.0) < 0.001) ? '' : round(v) + '*';
+            return `${s}${vStr}${t.v}`;
+        }).join(' ');
+    }
+
+    function combine(base, terms) {
+        let add = buildFormula(terms);
+        if(!add) return base;
+        if(!base) return add;
+        return base + (add.startsWith('-') ? ` ${add}` : ` + ${add}`);
+    }
+
+    function renderTable(id, rows) {
+        const tb = document.getElementById(id);
+        tb.innerHTML = '';
+        if(rows.length === 0) return;
+        rows.forEach(r => {
+            let tr = document.createElement('tr');
+            let tagsHtml = r.tags.map(t => `<span class="tag tag-${t.c}">${t.t}</span>`).join('');
+            tr.innerHTML = `<td class="col-name">${r.name}</td>
+                            <td class="col-formula"><span class="f-code">${r.f}</span></td>
+                            <td class="col-check">${tagsHtml}</td>`;
+            tb.appendChild(tr);
+        });
+    }
+
+    function generateNotes(c, loads, pN) {
+        const cont = document.getElementById('notesContainer');
+        cont.innerHTML = '';
+        const add = (title, text, imp) => cont.innerHTML += `<div class="note-item ${imp?'imp':''}"><strong>${title}</strong>${text}</div>`;
+
+        add('ELU (Resistencia)', 'Combinaciones según Ec. 4.3. Coeficientes: γG=1.35 (Desf), γQ=1.50.');
+        if(c.hasFav) add('ELU (Estabilidad EQU)', 'Se incluye γG=0.80 para verificar vuelco y levantamiento.', true);
+        
+        let els = '• <b>Característica:</b> Integridad elementos constructivos. Límites: <b>L/500</b> (frágil), <b>L/400</b> (ordinario). Desplome <b>H/500</b>.<br>';
+        els += '• <b>Frecuente:</b> Confort usuarios (vibraciones). Límite <b>L/350</b>.<br>';
+        els += '• <b>Casi Permanente:</b> Apariencia y flecha activa. Límite <b>L/300</b>.';
+        add('ELS (Servicio)', els);
+
+        if(c.hasN && c.alt==='low') add('Nieve Baja Cota', 'Coeficiente ψ₂=0. No se considera nieve en combinaciones sísmicas ni cuasi-permanentes.');
+        if(c.hasE) add('Sismo', 'Ec 4.5. Factores de carga = 1.0. La masa incluye G + P + Σ(ψ₂·Q).');
+    }
+
+    function copyBlock(id) {
+        let txt = '';
+        document.querySelectorAll(`#${id} tr`).forEach(tr => {
+            txt += `${tr.cells[0].innerText}\t${tr.cells[1].innerText}\n`;
+        });
+        navigator.clipboard.writeText(txt);
+        alert('Copiado al portapapeles');
+    }
+
+    function copyNotes() {
+        let txt = '';
+        document.querySelectorAll('.note-item').forEach(n => txt += n.innerText + '\n\n');
+        navigator.clipboard.writeText(txt);
+        alert('Informe Copiado');
+    }
+
+    toggleRoof();
+    calc();
+</script>
+
+</body>
+</html>
